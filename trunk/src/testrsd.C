@@ -3,6 +3,7 @@
 #include "mpi.h"
 #include "petsc.h"
 #include "schur.h"
+#include "schurUtils.h"
 
 int main(int argc, char** argv) {
   PetscInitialize(&argc, &argv, 0, 0);
