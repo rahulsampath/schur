@@ -1,0 +1,21 @@
+
+INCLUDE = -I./include ${PETSC_INCLUDE}
+
+LIBS = ${PETSC_LIB}
+
+EXEC = bin/testrsd
+
+all : $(EXEC)
+
+./src/%.o: ./src/%.$(CEXT)
+	$(PCC) -c $(CFLAGS) $(INCLUDE) $< -o $@ 
+	
+bin/testrsd : ./src/testrsd.o
+	$(PCC) $(CFLAGS) $^ -o $@ $(LIBS)
+
+myclean :
+	rm -rf ./src/*.o ./src/*~
+	rm -rf $(EXEC)
+
+
+
