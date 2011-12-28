@@ -1,6 +1,23 @@
 
 #include "schurUtils.h"
 
+void createMatrices(RSDnode* root, int localNx, int localNy) {
+  bool isLeaf = true;
+  if(root->child1) {
+    createMatrices(root->child1, localNx, localNy);
+    isLeaf = false;
+  }
+  if(root->child2) {
+    createMatrices(root->child2, localNx, localNy);
+    isLeaf = false;
+  }
+  if(isLeaf) {
+    if((root->childNumber) == 1) {
+    } else {
+    }
+  } else {
+  }
+}
 
 void deleteRSDtree(RSDnode* & root) {
   if(root->child1) {
@@ -10,13 +27,27 @@ void deleteRSDtree(RSDnode* & root) {
     deleteRSDtree(root->child2);
   }
   MPI_Comm_free(&(root->comm));
-  MatDestroy(root->k11);
-  MatDestroy(root->k22);
-  MatDestroy(root->k33);
-  MatDestroy(root->k13);
-  MatDestroy(root->k31);
-  MatDestroy(root->k23);
-  MatDestroy(root->k32);
+  if(root->k11) {
+    MatDestroy(root->k11);
+  }
+  if(root->k22) {
+    MatDestroy(root->k22);
+  }
+  if(root->k33) {
+    MatDestroy(root->k33);
+  }
+  if(root->k13) {
+    MatDestroy(root->k13);
+  }
+  if(root->k31) {
+    MatDestroy(root->k31);
+  }
+  if(root->k23) {
+    MatDestroy(root->k23);
+  }
+  if(root->k32) {
+    MatDestroy(root->k32);
+  }
   delete root;
   root = NULL;
 }
@@ -45,4 +76,5 @@ void createRSDtree(RSDnode* & root, MPI_Comm rootComm, int childNumber) {
     MPI_Comm_free(&newComm);
   }
 }
+
 
