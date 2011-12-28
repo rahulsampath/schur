@@ -6,14 +6,14 @@
 #include "petscmat.h"
 
 struct RSDnode {
+  int childNumber;
   MPI_Comm comm;
   RSDnode* child1;
   RSDnode* child2;
-  Mat k11, k13;
-  Mat k22, k23;
-  Mat k31, k32, k33;
+  Mat k11, k22, k33;
+  Mat k13, k31;
+  Mat k23, k32; 
 };
-
 
 #endif
 

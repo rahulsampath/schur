@@ -4,7 +4,9 @@
 
 #include "schur.h"
 
-void createRSDtree(RSDnode* & root, MPI_Comm rootComm);
+void createRSDtree(RSDnode* & root, MPI_Comm rootComm, int childNumber = 1);
+
+void deleteRSDtree(RSDnode* & root);
 
 #endif
 
