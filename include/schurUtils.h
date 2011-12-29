@@ -4,8 +4,6 @@
 
 #include "schur.h"
 
-void rsdDirectSolve(RSDnode* root, double* sol, double* rhs);
-
 void createRSDtree(RSDnode* & root, MPI_Comm rootComm);
 
 void deleteRSDtree(RSDnode* & root);
