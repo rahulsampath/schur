@@ -3,7 +3,6 @@
 #define __SCHUR__
 
 #include "mpi.h"
-#include "petscmat.h"
 
 struct RSDnode {
   MPI_Comm comm;
