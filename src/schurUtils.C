@@ -2,6 +2,10 @@
 #include "schurUtils.h"
 #include <cassert>
 
+void rsdDirectSolve(RSDnode* root, double* sol, double* rhs) {
+
+}
+
 void deleteRSDtree(RSDnode* & root) {
   if(root->child1) {
     deleteRSDtree(root->child1);
