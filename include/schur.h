@@ -6,8 +6,7 @@
 
 struct RSDnode {
   MPI_Comm comm;
-  RSDnode* child1;
-  RSDnode* child2;
+  RSDnode* child;
 };
 
 #endif
