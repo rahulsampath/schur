@@ -5,7 +5,6 @@
 #include "mpi.h"
 
 struct RSDnode {
-  MPI_Comm comm;
   RSDnode* child;
 };
 
