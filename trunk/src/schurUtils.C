@@ -1,4 +1,4 @@
 
-#include "schurUtils.h"
+#include "schur.h"
 #include <cassert>
 

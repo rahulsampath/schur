@@ -6,6 +6,8 @@
 
 struct RSDnode {
   RSDnode* child;
+  int rankForCurrLevel;
+  int npesForCurrLevel;
 };
 
 #endif
