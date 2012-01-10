@@ -10,6 +10,8 @@ struct RSDnode {
   int npesForCurrLevel;
 };
 
+void createRSDtree(RSDnode *& root, int rank, int npes);
+
 #endif
 
 
