@@ -49,6 +49,8 @@ void createLowAndHighComms(LocalData* data) {
   } else {
     data->commLow = MPI_COMM_NULL;
   }
+
+  MPI_Group_free(&groupAll);
 }
 
 
