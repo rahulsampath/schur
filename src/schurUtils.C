@@ -2,6 +2,14 @@
 #include "mpi.h"
 #include "schur.h"
 #include <cassert>
+#include <vector>
+
+void destroyRSDtree(RSDnode *root) {
+  if(root->child) {
+    destroyRSDtree(root->child);
+  }
+  delete root;  
+}
 
 void createRSDtree(RSDnode *& root, int rank, int npes) {
   root = new RSDnode;
@@ -53,6 +61,112 @@ void createLowAndHighComms(LocalData* data) {
   MPI_Group_free(&groupAll);
 }
 
+void computeSchurDiag(LocalData* data) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+  MPI_Request requestH;
+  std::vector<double> dH;
+  if(rank > 0) {
+    Vec diagH, diagSh;
+    std::vector<double> dHstar;
+    int Ssize, Hsize;
+    PetscScalar *arr;
+
+    MatGetVecs(data->Khh, PETSC_NULL, &diagH);
+    MatGetVecs(data->Kssh, PETSC_NULL, &diagSh);
+
+    MatGetDiagonal(data->Khh, diagH);
+    MatGetDiagonal(data->Kssh, diagSh);
+
+    VecGetSize(diagSh, &Ssize);
+    VecGetSize(diagH, &Hsize);
+
+    dHstar.resize(Ssize);
+    VecGetArray(diagH, &arr);
+    for(int i = 0; i < Ssize; i++) {
+      dHstar[i] = 0.0;
+      for(int k = 0; k < Hsize; k++) {
+        PetscScalar val1, val2;
+        MatGetValues(data->Ksh, 1, &i, 1, &k, &val1);
+        MatGetValues(data->Khs, 1, &k, 1, &i, &val2);
+        dHstar[i] += (val1*val2/(arr[k]));
+      }//end for k
+    }//end for i
+    VecRestoreArray(diagH, &arr);
+
+    dH.resize(Ssize);
+    VecGetArray(diagSh, &arr);
+    for(int i = 0; i < Ssize; i++) {
+      dH[i] = arr[i] - dHstar[i];
+    }//end for i
+    VecRestoreArray(diagSh, &arr);
+
+    MPI_Isend((&(dH[0])), Ssize, MPI_DOUBLE, 0, 3, data->commHigh, &requestH);
+
+    VecDestroy(diagH);
+    VecDestroy(diagSh);
+  }
+
+  std::vector<double> dHcopy;
+  if(rank < (npes - 1)) {
+    Vec diagL, diagSl;
+    std::vector<double> dLstar, dL;
+    int Ssize, Lsize;
+    PetscScalar *arr;
+
+    MatGetVecs(data->Kssl, PETSC_NULL, &diagSl);
+    MatGetDiagonal(data->Kssl, diagSl);
+    VecGetSize(diagSl, &Ssize);
+
+    dHcopy.resize(Ssize);
+
+    MPI_Request requestL;
+    MPI_Irecv((&(dHcopy[0])), Ssize, MPI_DOUBLE, 1, 3, data->commLow, &requestL);
+
+    MatGetVecs(data->Kll, PETSC_NULL, &diagL);
+    MatGetDiagonal(data->Kll, diagL);
+    VecGetSize(diagL, &Lsize);
+
+    dLstar.resize(Ssize);
+    VecGetArray(diagL, &arr);
+    for(int i = 0; i < Ssize; i++) {
+      dLstar[i] = 0.0;
+      for(int k = 0; k < Lsize; k++) {
+        PetscScalar val1, val2;
+        MatGetValues(data->Ksl, 1, &i, 1, &k, &val1);
+        MatGetValues(data->Kls, 1, &k, 1, &i, &val2);
+        dLstar[i] += (val1*val2/(arr[k]));
+      }//end for k
+    }//end for i
+    VecRestoreArray(diagL, &arr);
+
+    dL.resize(Ssize);
+    VecGetArray(diagSl, &arr);
+    for(int i = 0; i < Ssize; i++) {
+      dL[i] = arr[i] - dLstar[i];
+    }//end for i
+    VecRestoreArray(diagSl, &arr);
+
+    VecDestroy(diagL);
+    VecDestroy(diagSl);
+
+    MPI_Status status;
+    MPI_Wait(&requestL, &status);
+
+    VecGetArray(data->diagS, &arr);
+    for(int i = 0; i < Ssize; i++) {
+      arr[i] = dL[i] + dHcopy[i];
+    }//end for i
+    VecRestoreArray(data->diagS, &arr);
+  }
+
+  if(rank > 0) {
+    MPI_Status status;
+    MPI_Wait(&requestH, &status);
+  }
+}
 
 
 
