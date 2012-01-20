@@ -5,6 +5,7 @@
 #include "mpi.h"
 #include "petscmat.h"
 #include "petscdmmg.h"
+#include <vector>
 
 struct RSDnode {
   RSDnode* child;
@@ -29,6 +30,10 @@ void destroyRSDtree(RSDnode *root);
 void createLowAndHighComms(LocalData* data);
 
 void computeSchurDiag(LocalData* data);
+
+void mgSolve(LocalData* data, std::vector<double> & rhs, std::vector<double> & sol);
+
+void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
 
 #endif
 
