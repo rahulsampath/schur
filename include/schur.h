@@ -33,7 +33,7 @@ void computeSchurDiag(LocalData* data);
 
 void mgSolve(LocalData* data, std::vector<double> & rhs, std::vector<double> & sol);
 
-void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
+void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout);
 
 #endif
 

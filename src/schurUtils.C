@@ -4,16 +4,14 @@
 #include <cassert>
 #include <vector>
 
-void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
+void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout) {
   if(isLow) {
-    PetscInt Ssize;
-    MatGetSize(data->Kssl, PETSC_NULL, &Ssize);
+    PetscInt Lsize, Ssize;
+    MatGetSize(data->Kls, &Lsize, &Ssize);
 
     PetscScalar* arr;
     VecGetArray(uSin, &arr);
-
     MPI_Send(arr, Ssize, MPI_DOUBLE, 1, 3, data->commLow);
-
     VecRestoreArray(uSin, &arr);
 
     Vec uL;
@@ -26,23 +24,56 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     MatMult(data->Kls, uSin, vL);
 
-    std::vector<double> rhsVol, solVol;
+    std::vector<double> rhsVol(Vsize, 0.0);
+    std::vector<double> solVol(Vsize, 0.0);
+
+    VecGetArray(vL, &arr);
+    for(int i = 0; i < Lsize; i++) {
+      rhsVol[i] = arr[i];
+    }//end for i
+    VecRestoreArray(vL, &arr);
+
+    mgSolve(data, rhsVol, solVol);
+
+    Vec wL, wS;
+    MatGetVecs(data->Ksl, &wL, &wS);
+
+    VecGetArray(wL, &arr);
+    for(int i = 0; i < Lsize; i++) {
+      arr[i] = solVol[i];
+    }//end for i
+    VecRestoreArray(wL, &arr);
+
+    MatMult(data->Ksl, wL, wS);
+
+    Vec uStarL;
+    VecDuplicate(uL, &uStarL);
+
+    VecWAXPY(uStarL, -1.0, wS, uL);
+
+    MPI_Status status;
+    VecGetArray(uSout, &arr);
+    MPI_Recv(arr, Ssize, MPI_DOUBLE, 1, 4, data->commLow, &status);
+    VecRestoreArray(uSout, &arr);
+
+    VecAXPY(uSout, 1.0, uStarL);
 
     VecDestroy(uL);
     VecDestroy(vL);
+    VecDestroy(wL);
+    VecDestroy(wS);
+    VecDestroy(uStarL);
   } else {
-    PetscInt Ssize;
-    MatGetSize(data->Kssh, PETSC_NULL, &Ssize);
+    PetscInt Hsize, Ssize;
+    MatGetSize(data->Khs, &Hsize, &Ssize);
 
     Vec uSinCopy, uH;
     MatGetVecs(data->Kssh, &uSinCopy, &uH);
 
     PetscScalar* arr;
-    VecGetArray(uSinCopy, &arr);
-
     MPI_Status status;
+    VecGetArray(uSinCopy, &arr);
     MPI_Recv(arr, Ssize, MPI_DOUBLE, 0, 3, data->commHigh, &status);
-
     VecRestoreArray(uSinCopy, &arr);
 
     MatMult(data->Kssh, uSinCopy, uH);
@@ -52,11 +83,43 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     MatMult(data->Khs, uSinCopy, vH);
 
-    std::vector<double> rhsVol, solVol;
+    std::vector<double> rhsVol(Vsize, 0.0);
+    std::vector<double> solVol(Vsize, 0.0);
+
+    VecGetArray(vH, &arr);
+    for(int i = 0; i < Hsize; i++) {
+      rhsVol[i] = arr[i];
+    }//end for i
+    VecRestoreArray(vH, &arr);
+
+    mgSolve(data, rhsVol, solVol);
+
+    Vec wH, wS;
+    MatGetVecs(data->Ksh, &wH, &wS);
+
+    VecGetArray(wH, &arr);
+    for(int i = 0; i < Hsize; i++) {
+      arr[i] = solVol[i];
+    }//end for i
+    VecRestoreArray(wH, &arr);    
+
+    MatMult(data->Ksh, wH, wS);
+
+    Vec uStarH;
+    VecDuplicate(uH, &uStarH);
+
+    VecWAXPY(uStarH, -1.0, wS, uH);
+
+    VecGetArray(uStarH, &arr);
+    MPI_Send(arr, Ssize, MPI_DOUBLE, 0, 4, data->commHigh);
+    VecRestoreArray(uStarH, &arr);
 
     VecDestroy(uSinCopy);
     VecDestroy(uH);
     VecDestroy(vH);
+    VecDestroy(wH);
+    VecDestroy(wS);
+    VecDestroy(uStarH);
   }
 }
 
@@ -106,13 +169,12 @@ void computeSchurDiag(LocalData* data) {
     }//end for i
     VecRestoreArray(diagSh, &arr);
 
-    MPI_Isend((&(dH[0])), Ssize, MPI_DOUBLE, 0, 3, data->commHigh, &requestH);
+    MPI_Isend((&(dH[0])), Ssize, MPI_DOUBLE, 0, 2, data->commHigh, &requestH);
 
     VecDestroy(diagH);
     VecDestroy(diagSh);
   }
 
-  std::vector<double> dHcopy;
   if(rank < (npes - 1)) {
     Vec diagL, diagSl;
     std::vector<double> dLstar, dL;
@@ -123,10 +185,10 @@ void computeSchurDiag(LocalData* data) {
     MatGetDiagonal(data->Kssl, diagSl);
     VecGetSize(diagSl, &Ssize);
 
-    dHcopy.resize(Ssize);
+    std::vector<double> dHcopy(Ssize);
 
     MPI_Request requestL;
-    MPI_Irecv((&(dHcopy[0])), Ssize, MPI_DOUBLE, 1, 3, data->commLow, &requestL);
+    MPI_Irecv((&(dHcopy[0])), Ssize, MPI_DOUBLE, 1, 2, data->commLow, &requestL);
 
     MatGetVecs(data->Kll, PETSC_NULL, &diagL);
     MatGetDiagonal(data->Kll, diagL);
