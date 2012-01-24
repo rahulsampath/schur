@@ -263,7 +263,19 @@ void createLowAndHighComms(LocalData* data) {
   MPI_Group groupAll;
   MPI_Comm_group(data->commAll, &groupAll);
 
-  if(rank > 0) {
+  if((rank%2) == 0) {
+    if(rank < (npes - 1)) {
+      int lowRanks[2];
+      lowRanks[0] = rank;
+      lowRanks[1] = rank + 1;
+      MPI_Group lowGroup;
+      MPI_Group_incl(groupAll, 2, lowRanks, &lowGroup);
+      MPI_Comm_create(data->commAll, lowGroup, &(data->commLow));
+      MPI_Group_free(&lowGroup);
+    } else {
+      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commLow));
+    }
+  } else {
     int highRanks[2];
     highRanks[0] = rank - 1;
     highRanks[1] = rank;
@@ -271,20 +283,32 @@ void createLowAndHighComms(LocalData* data) {
     MPI_Group_incl(groupAll, 2, highRanks, &highGroup);
     MPI_Comm_create(data->commAll, highGroup, &(data->commHigh));
     MPI_Group_free(&highGroup);
-  } else {
-    data->commHigh = MPI_COMM_NULL;
   }
 
-  if(rank < (npes - 1)) {
-    int lowRanks[2];
-    lowRanks[0] = rank;
-    lowRanks[1] = rank + 1;
-    MPI_Group lowGroup;
-    MPI_Group_incl(groupAll, 2, lowRanks, &lowGroup);
-    MPI_Comm_create(data->commAll, lowGroup, &(data->commLow));
-    MPI_Group_free(&lowGroup);
+  if((rank%2) == 0) {
+    if(rank > 0) {
+      int highRanks[2];
+      highRanks[0] = rank - 1;
+      highRanks[1] = rank;
+      MPI_Group highGroup;
+      MPI_Group_incl(groupAll, 2, highRanks, &highGroup);
+      MPI_Comm_create(data->commAll, highGroup, &(data->commHigh));
+      MPI_Group_free(&highGroup);
+    } else {
+      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commHigh));
+    }
   } else {
-    data->commLow = MPI_COMM_NULL;
+    if(rank < (npes - 1)) {
+      int lowRanks[2];
+      lowRanks[0] = rank;
+      lowRanks[1] = rank + 1;
+      MPI_Group lowGroup;
+      MPI_Group_incl(groupAll, 2, lowRanks, &lowGroup);
+      MPI_Comm_create(data->commAll, lowGroup, &(data->commLow));
+      MPI_Group_free(&lowGroup);
+    } else {
+      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commLow));
+    }
   }
 
   MPI_Group_free(&groupAll);
