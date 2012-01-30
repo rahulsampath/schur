@@ -4,6 +4,68 @@
 #include <cassert>
 #include <vector>
 
+void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
+  if(root->child) {
+    if(root->rankForCurrLevel == (((root->npesForCurrLevel)/2) - 1)) {
+      PetscInt Lsize, Ssize;
+      MatGetSize(data->Kls, &Lsize, &Ssize);
+
+      Vec uS, wS;
+      MatGetVecs(data->Kssl, &uS, &wS);
+
+      PetscScalar* arr1;
+      PetscScalar* arr2;
+      VecGetArray(uIn, &arr1);
+      VecGetArray(uS, &arr2);
+      for(int i = 0; i < Ssize; i++) {
+        arr2[i] = arr1[i];
+      }//end for i
+      VecRestoreArray(uIn, &arr1);
+      MPI_Send(arr2, Ssize, MPI_DOUBLE, 1, 5, data->commLow);
+      VecRestoreArray(uS, &arr2);
+
+      Vec uL, bS, cL, yS;
+      MatGetVecs(data->Ksl, &uL, &bS);
+      VecDuplicate(uL, &cL); 
+      VecDuplicate(bS, &yS); 
+
+      VecDestroy(cL);
+      VecDestroy(uL);
+      VecDestroy(bS);
+      VecDestroy(yS);
+      VecDestroy(uS);
+      VecDestroy(wS);
+    } else if(root->rankForCurrLevel == ((root->npesForCurrLevel)/2)) {
+      PetscInt Hsize, Ssize;
+      MatGetSize(data->Khs, &Hsize, &Ssize);
+
+      Vec uS, wS;
+      MatGetVecs(data->Kssh, &uS, &wS);
+
+      PetscScalar* arr;
+      MPI_Status status;
+      VecGetArray(uS, &arr);
+      MPI_Recv(arr, Ssize, MPI_DOUBLE, 0, 5, data->commHigh, &status);
+      VecRestoreArray(uS, &arr);
+
+      Vec uH, bS, cH, yS;
+      MatGetVecs(data->Ksh, &uH, &bS);
+      VecDuplicate(uH, &cH); 
+      VecDuplicate(bS, &yS); 
+
+      VecDestroy(cH);
+      VecDestroy(uH);
+      VecDestroy(bS);
+      VecDestroy(yS);
+      VecDestroy(uS);
+      VecDestroy(wS);
+    } else {
+      KmatVec(data, root->child, uIn, uOut);
+    }
+  } else {
+  }
+}
+
 void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout) {
   if(isLow) {
     PetscInt Lsize, Ssize;
