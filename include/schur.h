@@ -35,6 +35,8 @@ void mgSolve(LocalData* data, std::vector<double> & rhs, std::vector<double> & s
 
 void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout);
 
+void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut);
+
 #endif
 
 
