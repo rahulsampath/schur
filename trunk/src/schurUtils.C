@@ -4,16 +4,99 @@
 #include <cassert>
 #include <vector>
 
+void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
+  if(root->child) {
+    if(root->rankForCurrLevel == (((root->npesForCurrLevel)/2) - 1)) {
+      Vec fTmp;
+      VecDuplicate(u, &fTmp);
+
+      Vec fL, fStar, fStarHigh, gS, uS;
+      MatGetVecs(data->Ksl, &fL, &fStar);
+      VecDuplicate(fStar, &fStarHigh);
+      VecDuplicate(fStar, &gS);
+      VecDuplicate(fStar, &uS);
+
+      RSDapplyInverse(data, root->child, f, fTmp);
+
+      map(data, O, fTmp, L, fL);
+
+      map(data, O, f, S, gS);
+
+      MatMult(data->Ksl, fL, fStar);
+
+      PetscInt Ssize;
+      VecGetSize(fStarHigh, &Ssize);
+
+      PetscScalar* arr;
+      MPI_Status status;
+      VecGetArray(fStarHigh, &arr);
+      MPI_Recv(arr, Ssize, MPI_DOUBLE, 1, 7, data->commLow, &status);
+      VecRestoreArray(fStarHigh, &arr);
+
+      VecAXPBYPCZ(gS, -1.0, -1.0, 1.0, fStar, fStarHigh);
+
+      VecDestroy(fTmp);
+      VecDestroy(fL);
+      VecDestroy(fStar);
+      VecDestroy(fStarHigh);
+      VecDestroy(gS);
+      VecDestroy(uS);
+    } else if(root->rankForCurrLevel == ((root->npesForCurrLevel)/2)) {
+      Vec fTmp;
+      VecDuplicate(u, &fTmp);
+
+      Vec fH, fStar, uS;
+      MatGetVecs(data->Ksh, &fH, &fStar);
+      VecDuplicate(fStar, &uS);
+
+      RSDapplyInverse(data, root->child, f, fTmp);
+
+      map(data, O, fTmp, H, fH);
+
+      MatMult(data->Ksh, fH, fStar);
+
+      PetscInt Ssize;
+      VecGetSize(fStar, &Ssize);
+
+      PetscScalar* arr;
+      VecGetArray(fStar, &arr);
+      MPI_Send(arr, Ssize, MPI_DOUBLE, 0, 7, data->commHigh);
+      VecRestoreArray(fStar, &arr);
+
+      VecDestroy(fTmp);
+      VecDestroy(fH);
+      VecDestroy(fStar);
+      VecDestroy(uS);
+    } else {
+      RSDapplyInverse(data, root->child, f, u);
+    }
+  } else {
+    Vec fMg, uMg;
+    createVector(data, MG, fMg);
+    VecZeroEntries(fMg);
+    VecDuplicate(fMg, &uMg);
+
+    map(data, O, f, MG, fMg);
+
+    mgSolve(data, fMg, uMg);
+
+    map(data, MG, uMg, O, u);
+
+    VecDestroy(fMg);
+    VecDestroy(uMg);
+  }
+}
+
 void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
   if(root->child) {
     if(root->rankForCurrLevel == (((root->npesForCurrLevel)/2) - 1)) {
-      PetscInt Lsize, Ssize;
-      MatGetSize(data->Kls, &Lsize, &Ssize);
-
       Vec uS, wS;
       MatGetVecs(data->Kssl, &uS, &wS);
 
       map(data, O, uIn, S, uS);
+
+      PetscInt Ssize;
+      VecGetSize(uS, &Ssize);
 
       PetscScalar* arr;
       VecGetArray(uS, &arr);
@@ -65,11 +148,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       VecDestroy(uS);
       VecDestroy(wS);
     } else if(root->rankForCurrLevel == ((root->npesForCurrLevel)/2)) {
-      PetscInt Hsize, Ssize;
-      MatGetSize(data->Khs, &Hsize, &Ssize);
-
       Vec uS, wS;
       MatGetVecs(data->Kssh, &uS, &wS);
+
+      PetscInt Ssize;
+      VecGetSize(uS, &Ssize);
 
       MPI_Status status;
       PetscScalar *arr;
@@ -135,8 +218,8 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
 
 void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
   if(isLow) {
-    PetscInt Lsize, Ssize;
-    MatGetSize(data->Kls, &Lsize, &Ssize);
+    PetscInt Ssize;
+    VecGetSize(uSin, &Ssize);
 
     PetscScalar* arr;
     VecGetArray(uSin, &arr);
@@ -189,11 +272,11 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     VecDestroy(wS);
     VecDestroy(uStarL);
   } else {
-    PetscInt Hsize, Ssize;
-    MatGetSize(data->Khs, &Hsize, &Ssize);
-
     Vec uSinCopy, uH;
     MatGetVecs(data->Kssh, &uSinCopy, &uH);
+
+    PetscInt Ssize;
+    VecGetSize(uSinCopy, &Ssize);
 
     PetscScalar* arr;
     MPI_Status status;
