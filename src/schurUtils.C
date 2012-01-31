@@ -13,22 +13,51 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       Vec uS, wS;
       MatGetVecs(data->Kssl, &uS, &wS);
 
-      PetscScalar* arr1;
-      PetscScalar* arr2;
-      VecGetArray(uIn, &arr1);
-      VecGetArray(uS, &arr2);
-      for(int i = 0; i < Ssize; i++) {
-        arr2[i] = arr1[i];
-      }//end for i
-      VecRestoreArray(uIn, &arr1);
-      MPI_Send(arr2, Ssize, MPI_DOUBLE, 1, 5, data->commLow);
-      VecRestoreArray(uS, &arr2);
+      map(data, O, uIn, S, uS);
+
+      PetscScalar* arr;
+      VecGetArray(uS, &arr);
+      MPI_Send(arr, Ssize, MPI_DOUBLE, 1, 5, data->commLow);
+      VecRestoreArray(uS, &arr);
 
       Vec uL, bS, cL, yS;
       MatGetVecs(data->Ksl, &uL, &bS);
       VecDuplicate(uL, &cL); 
       VecDuplicate(bS, &yS); 
 
+      map(data, O, uIn, L, uL);
+
+      MatMult(data->Kssl, uS, wS);
+
+      MatMult(data->Ksl, uL, bS);
+
+      MatMult(data->Kls, uS, cL);
+
+      VecWAXPY(yS, 1.0, wS, bS);
+
+      KmatVec(data, root->child, uIn, uOut);
+
+      Vec cO;
+      VecDuplicate(uOut, &cO);
+      VecZeroEntries(cO);
+
+      map(data, L, cL, O, cO);
+
+      VecAXPY(uOut, 1.0, cO);
+
+      MPI_Status status;
+      Vec uSout;
+      VecDuplicate(uS, &uSout);
+      VecGetArray(uSout, &arr);
+      MPI_Recv(arr, Ssize, MPI_DOUBLE, 1, 6, data->commLow, &status);
+      VecRestoreArray(uSout, &arr);
+
+      VecAXPY(uSout, 1.0, yS);
+
+      map(data, S, uSout, O, uOut);
+
+      VecDestroy(uSout);
+      VecDestroy(cO);
       VecDestroy(cL);
       VecDestroy(uL);
       VecDestroy(bS);
@@ -42,8 +71,8 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       Vec uS, wS;
       MatGetVecs(data->Kssh, &uS, &wS);
 
-      PetscScalar* arr;
       MPI_Status status;
+      PetscScalar *arr;
       VecGetArray(uS, &arr);
       MPI_Recv(arr, Ssize, MPI_DOUBLE, 0, 5, data->commHigh, &status);
       VecRestoreArray(uS, &arr);
@@ -53,6 +82,31 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       VecDuplicate(uH, &cH); 
       VecDuplicate(bS, &yS); 
 
+      map(data, O, uIn, H, uH);
+
+      MatMult(data->Kssh, uS, wS);
+
+      MatMult(data->Ksh, uH, bS);
+
+      MatMult(data->Khs, uS, cH);
+
+      VecWAXPY(yS, 1.0, wS, bS);
+
+      KmatVec(data, root->child, uIn, uOut);
+
+      Vec cO;
+      VecDuplicate(uOut, &cO);
+      VecZeroEntries(cO);
+
+      map(data, H, cH, O, cO);
+
+      VecAXPY(uOut, 1.0, cO);
+
+      VecGetArray(yS, &arr);
+      MPI_Send(arr, Ssize, MPI_DOUBLE, 0, 6, data->commHigh);
+      VecRestoreArray(yS, &arr);
+
+      VecDestroy(cO);
       VecDestroy(cH);
       VecDestroy(uH);
       VecDestroy(bS);
@@ -63,6 +117,19 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       KmatVec(data, root->child, uIn, uOut);
     }
   } else {
+    Vec uInMg, uOutMg;
+    createVector(data, MG, uInMg);
+    VecZeroEntries(uInMg);
+    VecDuplicate(uInMg, &uOutMg);
+
+    map(data, O, uIn, MG, uInMg);
+
+    mgMatMult(data, uInMg, uOutMg);
+
+    map(data, MG, uOutMg, O, uOut);
+
+    VecDestroy(uInMg);
+    VecDestroy(uOutMg);
   }
 }
 
@@ -79,30 +146,31 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     Vec uL;
     MatGetVecs(data->Kssl, PETSC_NULL, &uL);
 
-    MatMult(data->Kssl, uSin, uL);
-
     Vec vL;
     MatGetVecs(data->Kls, PETSC_NULL, &vL);
 
-    MatMult(data->Kls, uSin, vL);
-
     Vec rhsMg, solMg;
     createVector(data, MG, rhsMg);
+    VecZeroEntries(rhsMg);
     VecDuplicate(rhsMg, &solMg);
+
+    Vec wL, wS;
+    MatGetVecs(data->Ksl, &wL, &wS);
+
+    Vec uStarL;
+    VecDuplicate(uL, &uStarL);
+
+    MatMult(data->Kssl, uSin, uL);
+
+    MatMult(data->Kls, uSin, vL);
 
     map(data, L, vL, MG, rhsMg);
 
     mgSolve(data, rhsMg, solMg);
 
-    Vec wL, wS;
-    MatGetVecs(data->Ksl, &wL, &wS);
-
     map(data, MG, solMg, L, wL);
 
     MatMult(data->Ksl, wL, wS);
-
-    Vec uStarL;
-    VecDuplicate(uL, &uStarL);
 
     VecWAXPY(uStarL, -1.0, wS, uL);
 
@@ -133,30 +201,31 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     MPI_Recv(arr, Ssize, MPI_DOUBLE, 0, 3, data->commHigh, &status);
     VecRestoreArray(uSinCopy, &arr);
 
-    MatMult(data->Kssh, uSinCopy, uH);
-
     Vec vH;
     MatGetVecs(data->Khs, PETSC_NULL, &vH);
 
-    MatMult(data->Khs, uSinCopy, vH);
-
     Vec rhsMg, solMg;
     createVector(data, MG, rhsMg);
+    VecZeroEntries(rhsMg);
     VecDuplicate(rhsMg, &solMg);
+
+    Vec wH, wS;
+    MatGetVecs(data->Ksh, &wH, &wS);
+
+    Vec uStarH;
+    VecDuplicate(uH, &uStarH);
+
+    MatMult(data->Kssh, uSinCopy, uH);
+
+    MatMult(data->Khs, uSinCopy, vH);
 
     map(data, H, vH, MG, rhsMg);
 
     mgSolve(data, rhsMg, solMg);
 
-    Vec wH, wS;
-    MatGetVecs(data->Ksh, &wH, &wS);
-
     map(data, MG, solMg, H, wH);
 
     MatMult(data->Ksh, wH, wS);
-
-    Vec uStarH;
-    VecDuplicate(uH, &uStarH);
 
     VecWAXPY(uStarH, -1.0, wS, uH);
 
@@ -176,6 +245,10 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 }
 
 void mgSolve(LocalData* data, Vec rhs, Vec sol) {
+  //To be implemented
+}
+
+void mgMatMult(LocalData* data, Vec in, Vec out) {
   //To be implemented
 }
 
