@@ -19,8 +19,18 @@ struct LocalData {
   Mat Ksl, Ksh;
   Mat Kls, Khs;
   Mat Kll, Khh;
-  Vec diagS;
+  Vec diagS; 
   DMMG* mgObj;
+};
+
+//S = Schur
+//L = Low
+//H = High
+//O = Owned = S + V
+//V = Volume or Interior (includes domain boundaries)
+//MG = Multigrid (includes 0 dirichlet on both ends)
+enum ListType {
+  S, L, H, O, V, MG
 };
 
 void createRSDtree(RSDnode *& root, int rank, int npes);
@@ -31,11 +41,18 @@ void createLowAndHighComms(LocalData* data);
 
 void computeSchurDiag(LocalData* data);
 
-void mgSolve(LocalData* data, std::vector<double> & rhs, std::vector<double> & sol);
+//Uses MG ordering 
+void mgSolve(LocalData* data, Vec rhs, Vec sol);
 
-void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout);
+//Uses S ordering
+void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
 
+//Uses O ordering
 void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut);
+
+void createVector(LocalData* data, ListType type, Vec & v);
+
+void map(LocalData* data, ListType fromType, Vec fromVec, ListType toType, Vec toVec);
 
 #endif
 

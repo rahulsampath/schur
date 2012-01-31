@@ -66,7 +66,7 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
   }
 }
 
-void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout) {
+void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
   if(isLow) {
     PetscInt Lsize, Ssize;
     MatGetSize(data->Kls, &Lsize, &Ssize);
@@ -86,25 +86,18 @@ void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout) {
 
     MatMult(data->Kls, uSin, vL);
 
-    std::vector<double> rhsVol(Vsize, 0.0);
-    std::vector<double> solVol(Vsize, 0.0);
+    Vec rhsMg, solMg;
+    createVector(data, MG, rhsMg);
+    VecDuplicate(rhsMg, &solMg);
 
-    VecGetArray(vL, &arr);
-    for(int i = 0; i < Lsize; i++) {
-      rhsVol[i] = arr[i];
-    }//end for i
-    VecRestoreArray(vL, &arr);
+    map(data, L, vL, MG, rhsMg);
 
-    mgSolve(data, rhsVol, solVol);
+    mgSolve(data, rhsMg, solMg);
 
     Vec wL, wS;
     MatGetVecs(data->Ksl, &wL, &wS);
 
-    VecGetArray(wL, &arr);
-    for(int i = 0; i < Lsize; i++) {
-      arr[i] = solVol[i];
-    }//end for i
-    VecRestoreArray(wL, &arr);
+    map(data, MG, solMg, L, wL);
 
     MatMult(data->Ksl, wL, wS);
 
@@ -120,6 +113,8 @@ void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout) {
 
     VecAXPY(uSout, 1.0, uStarL);
 
+    VecDestroy(rhsMg);
+    VecDestroy(solMg);
     VecDestroy(uL);
     VecDestroy(vL);
     VecDestroy(wL);
@@ -145,25 +140,18 @@ void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout) {
 
     MatMult(data->Khs, uSinCopy, vH);
 
-    std::vector<double> rhsVol(Vsize, 0.0);
-    std::vector<double> solVol(Vsize, 0.0);
+    Vec rhsMg, solMg;
+    createVector(data, MG, rhsMg);
+    VecDuplicate(rhsMg, &solMg);
 
-    VecGetArray(vH, &arr);
-    for(int i = 0; i < Hsize; i++) {
-      rhsVol[i] = arr[i];
-    }//end for i
-    VecRestoreArray(vH, &arr);
+    map(data, H, vH, MG, rhsMg);
 
-    mgSolve(data, rhsVol, solVol);
+    mgSolve(data, rhsMg, solMg);
 
     Vec wH, wS;
     MatGetVecs(data->Ksh, &wH, &wS);
 
-    VecGetArray(wH, &arr);
-    for(int i = 0; i < Hsize; i++) {
-      arr[i] = solVol[i];
-    }//end for i
-    VecRestoreArray(wH, &arr);    
+    map(data, MG, solMg, H, wH);
 
     MatMult(data->Ksh, wH, wS);
 
@@ -176,6 +164,8 @@ void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout) {
     MPI_Send(arr, Ssize, MPI_DOUBLE, 0, 4, data->commHigh);
     VecRestoreArray(uStarH, &arr);
 
+    VecDestroy(rhsMg);
+    VecDestroy(solMg);
     VecDestroy(uSinCopy);
     VecDestroy(uH);
     VecDestroy(vH);
@@ -185,7 +175,7 @@ void schurMatVec(LocalData* data, bool isLow, int Vsize, Vec uSin, Vec uSout) {
   }
 }
 
-void mgSolve(LocalData* data, std::vector<double> & rhs, std::vector<double> & sol) {
+void mgSolve(LocalData* data, Vec rhs, Vec sol) {
   //To be implemented
 }
 
@@ -376,5 +366,10 @@ void createLowAndHighComms(LocalData* data) {
   MPI_Group_free(&groupAll);
 }
 
+void createVector(LocalData* data, ListType type, Vec & v) {
+}
+
+void map(LocalData* data, ListType fromType, Vec fromVec, ListType toType, Vec toVec) {
+}
 
 
