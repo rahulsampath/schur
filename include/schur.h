@@ -53,8 +53,13 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
 //Uses O ordering
 void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut);
 
+//Uses O ordering
+void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u);
+
+//This only allocates memory. The values may be junk. 
 void createVector(LocalData* data, ListType type, Vec & v);
 
+//This only sets the relevant values. It leaves the other values untouched.
 void map(LocalData* data, ListType fromType, Vec fromVec, ListType toType, Vec toVec);
 
 #endif
