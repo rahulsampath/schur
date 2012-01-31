@@ -44,6 +44,9 @@ void computeSchurDiag(LocalData* data);
 //Uses MG ordering 
 void mgSolve(LocalData* data, Vec rhs, Vec sol);
 
+//Uses MG ordering 
+void mgMatMult(LocalData* data, Vec in, Vec out);
+
 //Uses S ordering
 void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
 
