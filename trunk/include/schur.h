@@ -50,6 +50,9 @@ void mgMatMult(LocalData* data, Vec in, Vec out);
 //Uses S ordering
 void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
 
+//Uses S ordering
+void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol);
+
 //Uses O ordering
 void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut);
 
