@@ -2,6 +2,7 @@
 #include "mpi.h"
 #include "schur.h"
 #include <cassert>
+#include "petscdmmg.h"
 #include <vector>
 
 void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
@@ -17,14 +18,14 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       VecDuplicate(fStar, &uS);
       VecDuplicate(fL, &gL);
 
-      createVector(data, MG, gRhs);
+      VecDuplicate(DMMGGetRHS(data->mgObj), &gRhs);
       VecDuplicate(gRhs, &gSol);
 
       RSDapplyInverse(data, root->child, f, fTmp);
 
-      map(data, O, fTmp, L, fL);
+      map<O, L>(data, fTmp, fL);
 
-      map(data, O, f, S, gS);
+      map<O, S>(data, f, gS);
 
       MatMult(data->Ksl, fL, fStar);
 
@@ -48,16 +49,16 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MatMult(data->Kls, uS, gL);
 
       VecZeroEntries(gRhs);
-      map(data, L, gL, MG, gRhs);
+      map<L, MG>(data, gL, gRhs);
 
       mgSolve(data, gRhs, gSol);
 
       VecZeroEntries(u);
-      map(data, MG, gSol, O, u);
+      map<MG, O>(data, gSol, u);
       VecScale(u, -1.0);
       VecAXPY(u, 1.0, fTmp);
 
-      map(data, S, uS, O, u);
+      map<S, O>(data, uS, u);
 
       VecDestroy(gRhs);
       VecDestroy(gSol);
@@ -77,12 +78,12 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       VecDuplicate(fStar, &uS);
       VecDuplicate(fH, &gH);
 
-      createVector(data, MG, gRhs);
+      VecDuplicate(DMMGGetRHS(data->mgObj), &gRhs);
       VecDuplicate(gRhs, &gSol);
 
       RSDapplyInverse(data, root->child, f, fTmp);
 
-      map(data, O, fTmp, H, fH);
+      map<O, H>(data, fTmp, fH);
 
       MatMult(data->Ksh, fH, fStar);
 
@@ -104,12 +105,12 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MatMult(data->Khs, uS, gH);
 
       VecZeroEntries(gRhs);
-      map(data, H, gH, MG, gRhs);
+      map<H, MG>(data, gH, gRhs);
 
       mgSolve(data, gRhs, gSol);
 
       VecZeroEntries(u);
-      map(data, MG, gSol, O, u);
+      map<MG, O>(data, gSol, u);
       VecScale(u, -1.0);
       VecAXPY(u, 1.0, fTmp);
 
@@ -125,16 +126,16 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
     }
   } else {
     Vec fMg, uMg;
-    createVector(data, MG, fMg);
+    VecDuplicate(DMMGGetRHS(data->mgObj), &fMg);
     VecDuplicate(fMg, &uMg);
 
     VecZeroEntries(fMg);
-    map(data, O, f, MG, fMg);
+    map<O, MG>(data, f, fMg);
 
     mgSolve(data, fMg, uMg);
 
     VecZeroEntries(u);
-    map(data, MG, uMg, O, u);
+    map<MG, O>(data, uMg, u);
 
     VecDestroy(fMg);
     VecDestroy(uMg);
@@ -147,7 +148,7 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       Vec uS, wS;
       MatGetVecs(data->Kssl, &uS, &wS);
 
-      map(data, O, uIn, S, uS);
+      map<O, S>(data, uIn, uS);
 
       PetscInt Ssize;
       VecGetSize(uS, &Ssize);
@@ -162,7 +163,7 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       VecDuplicate(uL, &cL); 
       VecDuplicate(bS, &yS); 
 
-      map(data, O, uIn, L, uL);
+      map<O, L>(data, uIn, uL);
 
       MatMult(data->Kssl, uS, wS);
 
@@ -178,7 +179,7 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       VecDuplicate(uOut, &cO);
 
       VecZeroEntries(cO);
-      map(data, L, cL, O, cO);
+      map<L, O>(data, cL, cO);
 
       VecAXPY(uOut, 1.0, cO);
 
@@ -191,7 +192,7 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
 
       VecAXPY(uSout, 1.0, yS);
 
-      map(data, S, uSout, O, uOut);
+      map<S, O>(data, uSout, uOut);
 
       VecDestroy(uSout);
       VecDestroy(cO);
@@ -219,7 +220,7 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       VecDuplicate(uH, &cH); 
       VecDuplicate(bS, &yS); 
 
-      map(data, O, uIn, H, uH);
+      map<O, H>(data, uIn, uH);
 
       MatMult(data->Kssh, uS, wS);
 
@@ -235,7 +236,7 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       VecDuplicate(uOut, &cO);
 
       VecZeroEntries(cO);
-      map(data, H, cH, O, cO);
+      map<H, O>(data, cH, cO);
 
       VecAXPY(uOut, 1.0, cO);
 
@@ -255,16 +256,16 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
     }
   } else {
     Vec uInMg, uOutMg;
-    createVector(data, MG, uInMg);
+    VecDuplicate(DMMGGetx(data->mgObj), &uInMg);
     VecDuplicate(uInMg, &uOutMg);
 
     VecZeroEntries(uInMg);
-    map(data, O, uIn, MG, uInMg);
+    map<O, MG>(data, uIn, uInMg);
 
-    mgMatMult(data, uInMg, uOutMg);
+    MatMult(DMMGGetJ(data->mgObj), uInMg, uOutMg);
 
     VecZeroEntries(uOut);
-    map(data, MG, uOutMg, O, uOut);
+    map<MG, O>(data, uOutMg, uOut);
 
     VecDestroy(uInMg);
     VecDestroy(uOutMg);
@@ -288,7 +289,7 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     MatGetVecs(data->Kls, PETSC_NULL, &vL);
 
     Vec rhsMg, solMg;
-    createVector(data, MG, rhsMg);
+    VecDuplicate(DMMGGetRHS(data->mgObj), &rhsMg);
     VecDuplicate(rhsMg, &solMg);
 
     Vec wL, wS;
@@ -302,11 +303,11 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     MatMult(data->Kls, uSin, vL);
 
     VecZeroEntries(rhsMg);
-    map(data, L, vL, MG, rhsMg);
+    map<L, MG>(data, vL, rhsMg);
 
     mgSolve(data, rhsMg, solMg);
 
-    map(data, MG, solMg, L, wL);
+    map<MG, L>(data, solMg, wL);
 
     MatMult(data->Ksl, wL, wS);
 
@@ -343,7 +344,7 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     MatGetVecs(data->Khs, PETSC_NULL, &vH);
 
     Vec rhsMg, solMg;
-    createVector(data, MG, rhsMg);
+    VecDuplicate(DMMGGetRHS(data->mgObj), &rhsMg);
     VecDuplicate(rhsMg, &solMg);
 
     Vec wH, wS;
@@ -357,11 +358,11 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     MatMult(data->Khs, uSinCopy, vH);
 
     VecZeroEntries(rhsMg);
-    map(data, H, vH, MG, rhsMg);
+    map<H, MG>(data, vH, rhsMg);
 
     mgSolve(data, rhsMg, solMg);
 
-    map(data, MG, solMg, H, wH);
+    map<MG, H>(data, solMg, wH);
 
     MatMult(data->Ksh, wH, wS);
 
@@ -580,10 +581,6 @@ void createLowAndHighComms(LocalData* data) {
   MPI_Group_free(&groupAll);
 }
 
-void createVector(LocalData* data, ListType type, Vec & v) {
-}
 
-void map(LocalData* data, ListType fromType, Vec fromVec, ListType toType, Vec toVec) {
-}
 
 

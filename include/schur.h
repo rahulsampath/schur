@@ -6,6 +6,7 @@
 #include "petscmat.h"
 #include "petscdmmg.h"
 #include <vector>
+#include <cassert>
 
 struct RSDnode {
   RSDnode* child;
@@ -23,14 +24,14 @@ struct LocalData {
   DMMG* mgObj;
 };
 
-//S = Schur
-//L = Low
-//H = High
+//MG = Multigrid (includes 0 dirichlet on both ends)
 //O = Owned = S + V
 //V = Volume or Interior (includes domain boundaries)
-//MG = Multigrid (includes 0 dirichlet on both ends)
+//L = Low
+//H = High
+//S = Schur
 enum ListType {
-  S, L, H, O, V, MG
+  MG, O, L, H, S 
 };
 
 void createRSDtree(RSDnode *& root, int rank, int npes);
@@ -44,9 +45,6 @@ void computeSchurDiag(LocalData* data);
 //Uses MG ordering 
 void mgSolve(LocalData* data, Vec rhs, Vec sol);
 
-//Uses MG ordering 
-void mgMatMult(LocalData* data, Vec in, Vec out);
-
 //Uses S ordering
 void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
 
@@ -59,13 +57,73 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut);
 //Uses O ordering
 void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u);
 
-//This only allocates memory. The values may be junk. 
-void createVector(LocalData* data, ListType type, Vec & v);
-
 //This only sets the relevant values. It leaves the other values untouched.
-void map(LocalData* data, ListType fromType, Vec fromVec, ListType toType, Vec toVec);
+template<ListType fromType, ListType toType>
+inline void map(LocalData* data, Vec fromVec, Vec toVec);
+
+template<>
+inline void map<O, S>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<S, O>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<L, O>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<O, L>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<H, O>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<O, H>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<MG, L>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<L, MG>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<MG, H>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<H, MG>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<MG, O>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
+template<>
+inline void map<O, MG>(LocalData* data, Vec fromVec, Vec toVec) {
+  assert(false);
+}
+
 
 #endif
+
 
 
 
