@@ -11,15 +11,12 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       Vec fTmp;
       VecDuplicate(u, &fTmp);
 
-      Vec fL, fStar, fStarHigh, gS, uS, gL, gRhs, gSol;
+      Vec fL, fStar, fStarHigh, gS, uS, gL;
       MatGetVecs(data->Ksl, &fL, &fStar);
       VecDuplicate(fStar, &fStarHigh);
       VecDuplicate(fStar, &gS);
       VecDuplicate(fStar, &uS);
       VecDuplicate(fL, &gL);
-
-      VecDuplicate(DMMGGetRHS(data->mgObj), &gRhs);
-      VecDuplicate(gRhs, &gSol);
 
       RSDapplyInverse(data, root->child, f, fTmp);
 
@@ -48,10 +45,13 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
 
       MatMult(data->Kls, uS, gL);
 
+      Vec gRhs = DMMGGetRHS(data->mgObj);
+      Vec gSol = DMMGGetx(data->mgObj);
+      
       VecZeroEntries(gRhs);
       map<L, MG>(data, gL, gRhs);
-
-      mgSolve(data, gRhs, gSol);
+      
+      KSPSolve(DMMGGetKSP(data->mgObj), gRhs, gSol);
 
       VecZeroEntries(u);
       map<MG, O>(data, gSol, u);
@@ -60,8 +60,6 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
 
       map<S, O>(data, uS, u);
 
-      VecDestroy(gRhs);
-      VecDestroy(gSol);
       VecDestroy(gL);
       VecDestroy(fTmp);
       VecDestroy(fL);
@@ -73,13 +71,10 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       Vec fTmp;
       VecDuplicate(u, &fTmp);
 
-      Vec fH, fStar, uS, gH, gRhs, gSol;
+      Vec fH, fStar, uS, gH;
       MatGetVecs(data->Ksh, &fH, &fStar);
       VecDuplicate(fStar, &uS);
       VecDuplicate(fH, &gH);
-
-      VecDuplicate(DMMGGetRHS(data->mgObj), &gRhs);
-      VecDuplicate(gRhs, &gSol);
 
       RSDapplyInverse(data, root->child, f, fTmp);
 
@@ -104,18 +99,19 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
 
       MatMult(data->Khs, uS, gH);
 
+      Vec gRhs = DMMGGetRHS(data->mgObj);
+      Vec gSol = DMMGGetx(data->mgObj);
+
       VecZeroEntries(gRhs);
       map<H, MG>(data, gH, gRhs);
 
-      mgSolve(data, gRhs, gSol);
+      KSPSolve(DMMGGetKSP(data->mgObj), gRhs, gSol);
 
       VecZeroEntries(u);
       map<MG, O>(data, gSol, u);
       VecScale(u, -1.0);
       VecAXPY(u, 1.0, fTmp);
 
-      VecDestroy(gRhs);
-      VecDestroy(gSol);
       VecDestroy(gH);
       VecDestroy(fTmp);
       VecDestroy(fH);
@@ -125,20 +121,16 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       RSDapplyInverse(data, root->child, f, u);
     }
   } else {
-    Vec fMg, uMg;
-    VecDuplicate(DMMGGetRHS(data->mgObj), &fMg);
-    VecDuplicate(fMg, &uMg);
+    Vec fMg = DMMGGetRHS(data->mgObj);
+    Vec uMg = DMMGGetx(data->mgObj);
 
     VecZeroEntries(fMg);
     map<O, MG>(data, f, fMg);
 
-    mgSolve(data, fMg, uMg);
+    KSPSolve(DMMGGetKSP(data->mgObj), fMg, uMg);
 
     VecZeroEntries(u);
     map<MG, O>(data, uMg, u);
-
-    VecDestroy(fMg);
-    VecDestroy(uMg);
   }
 }
 
@@ -288,10 +280,6 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     Vec vL;
     MatGetVecs(data->Kls, PETSC_NULL, &vL);
 
-    Vec rhsMg, solMg;
-    VecDuplicate(DMMGGetRHS(data->mgObj), &rhsMg);
-    VecDuplicate(rhsMg, &solMg);
-
     Vec wL, wS;
     MatGetVecs(data->Ksl, &wL, &wS);
 
@@ -302,10 +290,13 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     MatMult(data->Kls, uSin, vL);
 
+    Vec rhsMg = DMMGGetRHS(data->mgObj);
+    Vec solMg = DMMGGetx(data->mgObj);
+
     VecZeroEntries(rhsMg);
     map<L, MG>(data, vL, rhsMg);
 
-    mgSolve(data, rhsMg, solMg);
+    KSPSolve(DMMGGetKSP(data->mgObj), rhsMg, solMg);
 
     map<MG, L>(data, solMg, wL);
 
@@ -320,8 +311,6 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     VecAXPY(uSout, 1.0, uStarL);
 
-    VecDestroy(rhsMg);
-    VecDestroy(solMg);
     VecDestroy(uL);
     VecDestroy(vL);
     VecDestroy(wL);
@@ -343,10 +332,6 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     Vec vH;
     MatGetVecs(data->Khs, PETSC_NULL, &vH);
 
-    Vec rhsMg, solMg;
-    VecDuplicate(DMMGGetRHS(data->mgObj), &rhsMg);
-    VecDuplicate(rhsMg, &solMg);
-
     Vec wH, wS;
     MatGetVecs(data->Ksh, &wH, &wS);
 
@@ -357,10 +342,13 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     MatMult(data->Khs, uSinCopy, vH);
 
+    Vec rhsMg = DMMGGetRHS(data->mgObj);
+    Vec solMg = DMMGGetx(data->mgObj);
+
     VecZeroEntries(rhsMg);
     map<H, MG>(data, vH, rhsMg);
 
-    mgSolve(data, rhsMg, solMg);
+    KSPSolve(DMMGGetKSP(data->mgObj), rhsMg, solMg);
 
     map<MG, H>(data, solMg, wH);
 
@@ -372,8 +360,6 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     MPI_Send(arr, Ssize, MPI_DOUBLE, 0, 4, data->commHigh);
     VecRestoreArray(uStarH, &arr);
 
-    VecDestroy(rhsMg);
-    VecDestroy(solMg);
     VecDestroy(uSinCopy);
     VecDestroy(uH);
     VecDestroy(vH);
