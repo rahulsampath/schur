@@ -42,9 +42,6 @@ void createLowAndHighComms(LocalData* data);
 
 void computeSchurDiag(LocalData* data);
 
-//Uses MG ordering 
-void mgSolve(LocalData* data, Vec rhs, Vec sol);
-
 //Uses S ordering
 void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
 
