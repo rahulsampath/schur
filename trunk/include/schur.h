@@ -20,6 +20,7 @@ struct LocalData {
   Mat Ksl, Ksh;
   Mat Kls, Khs;
   Mat Kll, Khh;
+  int N;
   Vec diagS; 
   DMMG* mgObj;
 };
@@ -109,13 +110,48 @@ inline void map<H, MG>(LocalData* data, Vec fromVec, Vec toVec) {
 }
 
 template<>
-inline void map<MG, O>(LocalData* data, Vec fromVec, Vec toVec) {
+inline void map<O, MG>(LocalData* data, Vec fromVec, Vec toVec) {
   assert(false);
 }
 
 template<>
-inline void map<O, MG>(LocalData* data, Vec fromVec, Vec toVec) {
-  assert(false);
+inline void map<MG, O>(LocalData* data, Vec fromVec, Vec toVec) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+  
+  DA da = DMMGGetDA(data->mgObj);
+  
+  PetscScalar** mgArr;
+  PetscScalar* oArr;
+  
+  VecGetArray(toVec, &oArr);
+  DAVecGetArray(da, fromVec, &mgArr);
+  
+  int oxs, onx;
+  if(rank == 0) {
+    oxs = 0;
+    onx = data->N;
+  } else {
+    oxs = 1;
+    onx = (data->N) - 1;
+  }
+
+  int vnx;
+  if(rank == (npes - 1)) {
+    vnx = onx;
+  } else {
+    vnx = onx - 1;
+  }
+
+  for(int yi = 0; yi < (data->N); ++yi) {
+    for(int xi = oxs; xi < (oxs + vnx); ++xi) {
+      oArr[(yi*onx) + (xi - oxs)] = mgArr[yi][xi];
+    }//end for xi
+  }//end for yi
+  
+  DAVecRestoreArray(da, fromVec, &mgArr);
+  VecRestoreArray(toVec, &oArr);
 }
 
 
