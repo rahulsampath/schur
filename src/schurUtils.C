@@ -410,14 +410,6 @@ void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol) {
   VecDestroy(solKsp);
 }
 
-void mgSolve(LocalData* data, Vec rhs, Vec sol) {
-  //To be implemented
-}
-
-void mgMatMult(LocalData* data, Vec in, Vec out) {
-  //To be implemented
-}
-
 void computeSchurDiag(LocalData* data) {
   int rank, npes;
   MPI_Comm_rank(data->commAll, &rank);
