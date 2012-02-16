@@ -3,6 +3,7 @@
 #define __SCHUR__
 
 #include "mpi.h"
+#include "petscksp.h"
 #include "petscmat.h"
 #include "petscdmmg.h"
 #include <vector>
@@ -21,6 +22,7 @@ struct LocalData {
   Mat Kls, Khs;
   Mat Kll, Khh;
   int N; 
+  KSP outerKsp, lowSchurKsp, highSchurKsp;
   Vec diagS; 
   DMMG* mgObj;
 };
