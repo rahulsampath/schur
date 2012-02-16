@@ -47,10 +47,10 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
 
       Vec gRhs = DMMGGetRHS(data->mgObj);
       Vec gSol = DMMGGetx(data->mgObj);
-      
+
       VecZeroEntries(gRhs);
       map<L, MG>(data, gL, gRhs);
-      
+
       KSPSolve(DMMGGetKSP(data->mgObj), gRhs, gSol);
 
       VecZeroEntries(u);
@@ -370,6 +370,44 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 }
 
 void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol) {
+  Vec rhsKsp, solKsp;
+
+  if(isLow) {
+    PetscInt localSize;
+    VecGetLocalSize(rhs, &localSize);
+    VecCreateMPI(data->commLow, localSize, PETSC_DETERMINE, &rhsKsp);
+  } else {
+    VecCreateMPI(data->commHigh, 0, PETSC_DETERMINE, &rhsKsp);
+  }
+  VecDuplicate(rhsKsp, &solKsp);
+
+  PetscScalar *rhsArr;
+  PetscScalar *solArr;
+
+  if(isLow) {
+    VecGetArray(rhs, &rhsArr);
+    VecGetArray(sol, &solArr);
+
+    VecPlaceArray(rhsKsp, rhsArr);
+    VecPlaceArray(solKsp, solArr);
+  }
+
+  if(isLow) {
+    KSPSolve(data->lowSchurKsp, rhsKsp, solKsp);
+  } else {
+    KSPSolve(data->highSchurKsp, rhsKsp, solKsp);
+  }
+
+  if(isLow) {
+    VecResetArray(rhsKsp);
+    VecResetArray(solKsp);
+
+    VecRestoreArray(rhs, &rhsArr);
+    VecRestoreArray(sol, &solArr);
+  }
+
+  VecDestroy(rhsKsp);
+  VecDestroy(solKsp);
 }
 
 void mgSolve(LocalData* data, Vec rhs, Vec sol) {
