@@ -60,16 +60,6 @@ template<ListType fromType, ListType toType>
 inline void map(LocalData* data, Vec fromVec, Vec toVec);
 
 template<>
-inline void map<O, S>(LocalData* data, Vec fromVec, Vec toVec) {
-  assert(false);
-}
-
-template<>
-inline void map<S, O>(LocalData* data, Vec fromVec, Vec toVec) {
-  assert(false);
-}
-
-template<>
 inline void map<L, O>(LocalData* data, Vec fromVec, Vec toVec) {
   assert(false);
 }
@@ -87,6 +77,68 @@ inline void map<H, O>(LocalData* data, Vec fromVec, Vec toVec) {
 template<>
 inline void map<O, H>(LocalData* data, Vec fromVec, Vec toVec) {
   assert(false);
+}
+
+template<>
+inline void map<O, S>(LocalData* data, Vec fromVec, Vec toVec) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+  assert(rank < (npes - 1));
+
+  PetscScalar* oArr;
+  PetscScalar* sArr;
+
+  int oxs, onx;
+  if(rank == 0) {
+    oxs = 0;
+    onx = data->N;
+  } else {
+    oxs = 1;
+    onx = (data->N) - 1;
+  }
+
+  VecGetArray(fromVec, &oArr);
+  VecGetArray(toVec, &sArr);
+
+  for(int yi = 0; yi < (data->N); ++yi) {
+    sArr[yi] = oArr[(yi*onx) + ((data->N - 1) - oxs)];
+  }//end for yi
+
+  VecRestoreArray(fromVec, &oArr);
+  VecRestoreArray(toVec, &sArr);
+}
+
+template<>
+inline void map<S, O>(LocalData* data, Vec fromVec, Vec toVec) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+  assert(rank < (npes - 1));
+
+  PetscScalar* oArr;
+  PetscScalar* sArr;
+
+  int oxs, onx;
+  if(rank == 0) {
+    oxs = 0;
+    onx = data->N;
+  } else {
+    oxs = 1;
+    onx = (data->N) - 1;
+  }
+
+  VecGetArray(fromVec, &sArr);
+  VecGetArray(toVec, &oArr);
+
+  for(int yi = 0; yi < (data->N); ++yi) {
+    oArr[(yi*onx) + ((data->N - 1) - oxs)] = sArr[yi];
+  }//end for yi
+
+  VecRestoreArray(fromVec, &sArr);
+  VecRestoreArray(toVec, &oArr);
 }
 
 template<>
