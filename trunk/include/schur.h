@@ -22,6 +22,7 @@ struct LocalData {
   Mat Kls, Khs;
   Mat Kll, Khh;
   int N; 
+  Mat outerMat, lowSchurMat, highSchurMat;
   KSP outerKsp, lowSchurKsp, highSchurKsp;
   Vec diagS; 
   DMMG* mgObj;
