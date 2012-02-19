@@ -5,6 +5,24 @@
 #include "petscdmmg.h"
 #include <vector>
 
+void createOuterKsp(LocalData* data) {
+  KSPCreate(data->commAll, &(data->outerKsp));
+  KSPSetOperators(data->outerKsp, data->outerMat,
+      data->outerMat, SAME_NONZERO_PATTERN);
+  KSPSetType(data->outerKsp, KSPFGMRES);
+  KSPSetPC(data->outerKsp, data->outerPC);
+  KSPSetOptionsPrefix(data->outerKsp, "outer_");
+  KSPSetFromOptions(data->outerKsp);
+  KSPSetUp(data->outerKsp);
+}
+
+void createInnerKsp(LocalData* data){
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+}
+
 void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
   if(root->child) {
     if(root->rankForCurrLevel == (((root->npesForCurrLevel)/2) - 1)) {

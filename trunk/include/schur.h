@@ -22,6 +22,7 @@ struct LocalData {
   Mat Kls, Khs;
   Mat Kll, Khh;
   int N; 
+  PC outerPC;
   Mat outerMat, lowSchurMat, highSchurMat;
   KSP outerKsp, lowSchurKsp, highSchurKsp;
   Vec diagS; 
@@ -37,6 +38,10 @@ struct LocalData {
 enum ListType {
   MG, O, L, H, S 
 };
+
+void createOuterKsp(LocalData* data);
+
+void createInnerKsp(LocalData* data);
 
 void createRSDtree(RSDnode *& root, int rank, int npes);
 
