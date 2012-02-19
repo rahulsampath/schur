@@ -10,31 +10,74 @@ void createOuterKsp(LocalData* data) {
   KSPSetOperators(data->outerKsp, data->outerMat,
       data->outerMat, SAME_NONZERO_PATTERN);
   KSPSetType(data->outerKsp, KSPFGMRES);
-  KSPSetPC(data->outerKsp, data->outerPC);
   KSPSetOptionsPrefix(data->outerKsp, "outer_");
+  KSPSetPC(data->outerKsp, data->outerPC);
   KSPSetFromOptions(data->outerKsp);
   KSPSetUp(data->outerKsp);
 }
 
-void createInnerKsp(LocalData* data){
+void createInnerKsp(LocalData* data) {
   int rank, npes;
   MPI_Comm_rank(data->commAll, &rank);
   MPI_Comm_size(data->commAll, &npes);
 
   if((rank%2) == 0) {
     if(rank < (npes - 1)) {
+      KSPCreate(data->commLow, &(data->lowSchurKsp));
+      KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
+          data->lowSchurMat, SAME_NONZERO_PATTERN);
+      KSPSetType(data->lowSchurKsp, KSPFGMRES);
+      KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
+      PC pc;
+      KSPGetPC(data->lowSchurKsp, &pc);
+      PCSetType(pc, PCJACOBI);
+      KSPSetFromOptions(data->lowSchurKsp);
+      KSPSetUp(data->lowSchurKsp);
     } else {
+      data->lowSchurKsp = PETSC_NULL;
     }
   } else {
+    KSPCreate(data->commHigh, &(data->highSchurKsp));
+    KSPSetOperators(data->highSchurKsp, data->highSchurMat,
+        data->highSchurMat, SAME_NONZERO_PATTERN);
+    KSPSetType(data->highSchurKsp, KSPFGMRES);
+    KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
+    PC pc;
+    KSPGetPC(data->highSchurKsp, &pc);
+    PCSetType(pc, PCJACOBI);
+    KSPSetFromOptions(data->highSchurKsp);
+    KSPSetUp(data->highSchurKsp);
   }
 
   if((rank%2) == 0) {
     if(rank > 0) {
+      KSPCreate(data->commHigh, &(data->highSchurKsp));
+      KSPSetOperators(data->highSchurKsp, data->highSchurMat,
+          data->highSchurMat, SAME_NONZERO_PATTERN);
+      KSPSetType(data->highSchurKsp, KSPFGMRES);
+      KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
+      PC pc;
+      KSPGetPC(data->highSchurKsp, &pc);
+      PCSetType(pc, PCJACOBI);
+      KSPSetFromOptions(data->highSchurKsp);
+      KSPSetUp(data->highSchurKsp);
     } else {
+      data->highSchurKsp = PETSC_NULL;
     }
   } else {
     if(rank < (npes - 1)) {
+      KSPCreate(data->commLow, &(data->lowSchurKsp));
+      KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
+          data->lowSchurMat, SAME_NONZERO_PATTERN);
+      KSPSetType(data->lowSchurKsp, KSPFGMRES);
+      KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
+      PC pc;
+      KSPGetPC(data->lowSchurKsp, &pc);
+      PCSetType(pc, PCJACOBI);
+      KSPSetFromOptions(data->lowSchurKsp);
+      KSPSetUp(data->lowSchurKsp);
     } else {
+      data->lowSchurKsp = PETSC_NULL;
     }
   }
 
