@@ -21,6 +21,23 @@ void createInnerKsp(LocalData* data){
   MPI_Comm_rank(data->commAll, &rank);
   MPI_Comm_size(data->commAll, &npes);
 
+  if((rank%2) == 0) {
+    if(rank < (npes - 1)) {
+    } else {
+    }
+  } else {
+  }
+
+  if((rank%2) == 0) {
+    if(rank > 0) {
+    } else {
+    }
+  } else {
+    if(rank < (npes - 1)) {
+    } else {
+    }
+  }
+
 }
 
 void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
@@ -614,7 +631,6 @@ void createLowAndHighComms(LocalData* data) {
 
   MPI_Group_free(&groupAll);
 }
-
 
 
 
