@@ -5,6 +5,46 @@
 #include "petscdmmg.h"
 #include <vector>
 
+void createOuterPC(OuterPCcontext* ctx) {
+  PCCreate(((ctx->data)->commAll), &((ctx->data)->outerPC));
+  PCSetType(((ctx->data)->outerPC), PCSHELL);
+  PCShellSetContext(((ctx->data)->outerPC), ctx);
+  PCShellSetApply(((ctx->data)->outerPC), &outerPCapply);
+}
+
+PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
+  OuterPCcontext* ctx = static_cast<OuterPCcontext*>(ptr);
+
+  PetscInt localSize;
+  VecGetLocalSize(in, &localSize);
+
+  Vec inSeq, outSeq;
+  VecCreateSeq(PETSC_COMM_SELF, localSize, &inSeq);
+  VecDuplicate(inSeq, &outSeq);
+
+  PetscScalar *inArr;
+  PetscScalar *outArr;
+
+  VecGetArray(in, &inArr);
+  VecGetArray(out, &outArr);
+
+  VecPlaceArray(inSeq, inArr);
+  VecPlaceArray(outSeq, outArr);
+
+  RSDapplyInverse((ctx->data), (ctx->root), inSeq, outSeq);
+
+  VecResetArray(inSeq);
+  VecResetArray(outSeq);
+
+  VecRestoreArray(in, &inArr);
+  VecRestoreArray(out, &outArr);
+
+  VecDestroy(inSeq);
+  VecDestroy(outSeq);
+
+  return 0;
+}
+
 void createOuterKsp(LocalData* data) {
   KSPCreate(data->commAll, &(data->outerKsp));
   KSPSetOperators(data->outerKsp, data->outerMat,
