@@ -29,6 +29,11 @@ struct LocalData {
   DMMG* mgObj;
 };
 
+struct OuterPCcontext {
+  LocalData* data;
+  RSDnode* root;
+};
+
 //MG = Multigrid (includes 0 dirichlet on both ends)
 //O = Owned = S + V
 //V = Volume or Interior (includes domain boundaries)
@@ -38,6 +43,8 @@ struct LocalData {
 enum ListType {
   MG, O, L, H, S 
 };
+
+void createOuterPC(OuterPCcontext* ctx); 
 
 void createOuterKsp(LocalData* data);
 
@@ -62,6 +69,8 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut);
 
 //Uses O ordering
 void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u);
+
+PetscErrorCode outerPCapply(void* ctx, Vec in, Vec out);
 
 //This only sets the relevant values. It leaves the other values untouched.
 template<ListType fromType, ListType toType>
