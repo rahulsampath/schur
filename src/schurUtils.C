@@ -99,6 +99,12 @@ void createOuterPC(OuterContext* ctx) {
   PCShellSetApply(((ctx->data)->outerPC), &outerPCapply);
 }
 
+PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
+  assert(J == B);
+
+  return 0;
+}
+
 PetscErrorCode dummyMatDestroy(Mat mat) {
   return 0;
 }
@@ -171,11 +177,32 @@ PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {
   OuterContext* ctx;
   MatShellGetContext(mat, (void**)(&ctx));
 
-  return 0;
-}
+  PetscInt localSize;
+  VecGetLocalSize(in, &localSize);
 
-PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
-  assert(J == B);
+  Vec inSeq, outSeq;
+  VecCreateSeq(PETSC_COMM_SELF, localSize, &inSeq);
+  VecDuplicate(inSeq, &outSeq);
+
+  PetscScalar *inArr;
+  PetscScalar *outArr;
+
+  VecGetArray(in, &inArr);
+  VecGetArray(out, &outArr);
+
+  VecPlaceArray(inSeq, inArr);
+  VecPlaceArray(outSeq, outArr);
+
+  KmatVec((ctx->data), (ctx->root), inSeq, outSeq);
+
+  VecResetArray(inSeq);
+  VecResetArray(outSeq);
+
+  VecRestoreArray(in, &inArr);
+  VecRestoreArray(out, &outArr);
+
+  VecDestroy(inSeq);
+  VecDestroy(outSeq);
 
   return 0;
 }
