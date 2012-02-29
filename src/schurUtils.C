@@ -23,10 +23,75 @@ void createOuterMat(OuterContext* ctx) {
   MatCreateShell(((ctx->data)->commAll), locSize, locSize,
       PETSC_DETERMINE, PETSC_DETERMINE, ctx, &mat);
   MatShellSetOperation(mat, MATOP_MULT, (void(*)(void))(&outerMatMult));
+  MatShellSetOperation(mat, MATOP_DESTROY, (void(*)(void))(&dummyMatDestroy));
+
   (ctx->data)->outerMat = mat;
 }
 
 void createSchurMat(LocalData* data) {
+  int rank, npes;
+  MPI_Comm_rank((data->commAll), &rank);
+  MPI_Comm_size((data->commAll), &npes);
+
+  Mat lowMat = PETSC_NULL;
+  Mat highMat = PETSC_NULL;
+
+  if((rank%2) == 0) {
+    if(rank < (npes - 1)) {
+      MatCreateShell((data->commLow), (data->N), (data->N),
+          PETSC_DETERMINE, PETSC_DETERMINE, data, &lowMat);
+    }
+  } else {
+    MatCreateShell((data->commHigh), 0, 0,
+        PETSC_DETERMINE, PETSC_DETERMINE, data, &highMat);
+  }
+
+  if((rank%2) == 0) {
+    if(rank > 0) {
+      MatCreateShell((data->commHigh), 0, 0,
+          PETSC_DETERMINE, PETSC_DETERMINE, data, &highMat);
+    }
+  } else {
+    if(rank < (npes - 1)) {
+      MatCreateShell((data->commLow), (data->N), (data->N),
+          PETSC_DETERMINE, PETSC_DETERMINE, data, &lowMat);
+    }
+  }
+
+  if(lowMat) {
+    MatShellSetOperation(lowMat, MATOP_MULT, (void(*)(void))(&lowSchurMatMult));
+    MatShellSetOperation(lowMat, MATOP_GET_DIAGONAL, (void(*)(void))(&lowSchurMatDiag));
+    MatShellSetOperation(lowMat, MATOP_DESTROY, (void(*)(void))(&dummyMatDestroy));
+  }
+
+  if(highMat) {
+    MatShellSetOperation(highMat, MATOP_MULT, (void(*)(void))(&highSchurMatMult));
+    MatShellSetOperation(highMat, MATOP_GET_DIAGONAL, (void(*)(void))(&highSchurMatDiag));
+    MatShellSetOperation(highMat, MATOP_DESTROY, (void(*)(void))(&dummyMatDestroy));
+  }
+
+  data->lowSchurMat = lowMat;
+  data->highSchurMat = highMat;
+}
+
+PetscErrorCode dummyMatDestroy(Mat mat) {
+  return 0;
+}
+
+PetscErrorCode lowSchurMatDiag(Mat mat, Vec out) {
+  return 0;
+}
+
+PetscErrorCode highSchurMatDiag(Mat mat, Vec out) {
+  return 0;
+}
+
+PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
+  return 0;
+}
+
+PetscErrorCode highSchurMatMult(Mat mat, Vec in, Vec out) {
+  return 0;
 }
 
 PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {

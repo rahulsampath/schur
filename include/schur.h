@@ -44,11 +44,21 @@ enum ListType {
   MG, O, L, H, S 
 };
 
+PetscErrorCode dummyMatDestroy(Mat mat);
+
 void createOuterMat(OuterContext* ctx);
 
 PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out);
 
 void createSchurMat(LocalData* data);
+
+PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out);
+
+PetscErrorCode highSchurMatMult(Mat mat, Vec in, Vec out);
+
+PetscErrorCode lowSchurMatDiag(Mat mat, Vec out);
+
+PetscErrorCode highSchurMatDiag(Mat mat, Vec out);
 
 void createMG(LocalData* data);
 
