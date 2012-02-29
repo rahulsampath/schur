@@ -74,30 +74,6 @@ void createSchurMat(LocalData* data) {
   data->highSchurMat = highMat;
 }
 
-PetscErrorCode dummyMatDestroy(Mat mat) {
-  return 0;
-}
-
-PetscErrorCode lowSchurMatDiag(Mat mat, Vec out) {
-  return 0;
-}
-
-PetscErrorCode highSchurMatDiag(Mat mat, Vec out) {
-  return 0;
-}
-
-PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
-  return 0;
-}
-
-PetscErrorCode highSchurMatMult(Mat mat, Vec in, Vec out) {
-  return 0;
-}
-
-PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {
-  return 0;
-}
-
 void createMG(LocalData* data) {
   assert(data->N >= 16);
   int nlevels = (std::floor(log2(data->N))) - 2;
@@ -121,6 +97,46 @@ void createOuterPC(OuterContext* ctx) {
   PCSetType(((ctx->data)->outerPC), PCSHELL);
   PCShellSetContext(((ctx->data)->outerPC), ctx);
   PCShellSetApply(((ctx->data)->outerPC), &outerPCapply);
+}
+
+PetscErrorCode dummyMatDestroy(Mat mat) {
+  return 0;
+}
+
+PetscErrorCode lowSchurMatDiag(Mat mat, Vec out) {
+  LocalData* data;
+  MatShellGetContext(mat, (void**)(&data));
+
+  PetscScalar* outArr;
+  PetscScalar* inArr;
+
+  VecGetArray(out, &outArr);
+  VecGetArray(data->diagS, &inArr);
+
+  for(int i = 0; i < (data->N); ++i) {
+    outArr[i] = inArr[i];
+  }//end i
+
+  VecRestoreArray(out, &outArr);
+  VecRestoreArray(data->diagS, &inArr);
+
+  return 0;
+}
+
+PetscErrorCode highSchurMatDiag(Mat mat, Vec out) {
+  return 0;
+}
+
+PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
+  return 0;
+}
+
+PetscErrorCode highSchurMatMult(Mat mat, Vec in, Vec out) {
+  return 0;
+}
+
+PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {
+  return 0;
 }
 
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
@@ -645,7 +661,7 @@ void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol) {
   VecDestroy(solKsp);
 }
 
-void computeSchurDiag(LocalData* data) {
+void createSchurDiag(LocalData* data) {
   int rank, npes;
   MPI_Comm_rank(data->commAll, &rank);
   MPI_Comm_size(data->commAll, &npes);
@@ -738,6 +754,7 @@ void computeSchurDiag(LocalData* data) {
     MPI_Status status;
     MPI_Wait(&requestL, &status);
 
+    VecCreateSeq(PETSC_COMM_SELF, Ssize, &(data->diagS));
     VecGetArray(data->diagS, &arr);
     for(int i = 0; i < Ssize; i++) {
       arr[i] = dL[i] + dHcopy[i];
