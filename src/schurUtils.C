@@ -2,14 +2,39 @@
 #include "mpi.h"
 #include "schur.h"
 #include <cassert>
+#include <cmath>
 #include "petscdmmg.h"
 #include <vector>
+
+void createMG(LocalData* data) {
+  assert(data->N >= 16);
+  int nlevels = (std::floor(log2(data->N))) - 2;
+  assert((8<<(nlevels - 1)) == ((data->N) - 1));
+
+  DMMGCreate(PETSC_COMM_SELF, -nlevels, PETSC_NULL, &(data->mgObj));
+
+  DA da;
+  DACreate2d(PETSC_COMM_SELF, DA_NONPERIODIC, DA_STENCIL_BOX, 9, 9,
+      PETSC_DECIDE, PETSC_DECIDE, 1, 1, PETSC_NULL, PETSC_NULL, &da);
+  DMMGSetDM((data->mgObj), (DM)da);
+  DADestroy(da);
+
+  DMMGSetKSP((data->mgObj), PETSC_NULL, &computeMGmatrix);
+  DMMGSetFromOptions(data->mgObj);
+  DMMGSetUp(data->mgObj);
+}
 
 void createOuterPC(OuterPCcontext* ctx) {
   PCCreate(((ctx->data)->commAll), &((ctx->data)->outerPC));
   PCSetType(((ctx->data)->outerPC), PCSHELL);
   PCShellSetContext(((ctx->data)->outerPC), ctx);
   PCShellSetApply(((ctx->data)->outerPC), &outerPCapply);
+}
+
+PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
+  assert(J == B);
+
+  return 0;
 }
 
 PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
