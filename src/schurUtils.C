@@ -3,8 +3,35 @@
 #include "schur.h"
 #include <cassert>
 #include <cmath>
-#include "petscdmmg.h"
 #include <vector>
+#include "petscdmmg.h"
+
+void createOuterMat(OuterContext* ctx) {
+  int rank;
+  MPI_Comm_rank(((ctx->data)->commAll), &rank);
+
+  int onx;
+  if(rank == 0) {
+    onx = (ctx->data)->N;
+  } else {
+    onx = ((ctx->data)->N) - 1;
+  }
+
+  int locSize = (onx*((ctx->data)->N));
+
+  Mat mat;
+  MatCreateShell(((ctx->data)->commAll), locSize, locSize,
+      PETSC_DETERMINE, PETSC_DETERMINE, ctx, &mat);
+  MatShellSetOperation(mat, MATOP_MULT, (void(*)(void))(&outerMatMult));
+  (ctx->data)->outerMat = mat;
+}
+
+void createSchurMat(LocalData* data) {
+}
+
+PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {
+  return 0;
+}
 
 void createMG(LocalData* data) {
   assert(data->N >= 16);
@@ -24,7 +51,7 @@ void createMG(LocalData* data) {
   DMMGSetUp(data->mgObj);
 }
 
-void createOuterPC(OuterPCcontext* ctx) {
+void createOuterPC(OuterContext* ctx) {
   PCCreate(((ctx->data)->commAll), &((ctx->data)->outerPC));
   PCSetType(((ctx->data)->outerPC), PCSHELL);
   PCShellSetContext(((ctx->data)->outerPC), ctx);
@@ -38,7 +65,7 @@ PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
 }
 
 PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
-  OuterPCcontext* ctx = static_cast<OuterPCcontext*>(ptr);
+  OuterContext* ctx = static_cast<OuterContext*>(ptr);
 
   PetscInt localSize;
   VecGetLocalSize(in, &localSize);

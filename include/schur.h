@@ -29,7 +29,7 @@ struct LocalData {
   DMMG* mgObj;
 };
 
-struct OuterPCcontext {
+struct OuterContext {
   LocalData* data;
   RSDnode* root;
 };
@@ -44,11 +44,17 @@ enum ListType {
   MG, O, L, H, S 
 };
 
+void createOuterMat(OuterContext* ctx);
+
+PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out);
+
+void createSchurMat(LocalData* data);
+
 void createMG(LocalData* data);
 
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B);
 
-void createOuterPC(OuterPCcontext* ctx); 
+void createOuterPC(OuterContext* ctx); 
 
 void createOuterKsp(LocalData* data);
 
