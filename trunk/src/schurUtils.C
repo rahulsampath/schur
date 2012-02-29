@@ -128,14 +128,49 @@ PetscErrorCode highSchurMatDiag(Mat mat, Vec out) {
 }
 
 PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
+  LocalData* data;
+  MatShellGetContext(mat, (void**)(&data));
+
+  Vec inSeq, outSeq;
+  VecCreateSeq(PETSC_COMM_SELF, (data->N), &inSeq);
+  VecDuplicate(inSeq, &outSeq);
+
+  PetscScalar *inArr;
+  PetscScalar *outArr;
+
+  VecGetArray(in, &inArr);
+  VecGetArray(out, &outArr);
+
+  VecPlaceArray(inSeq, inArr);
+  VecPlaceArray(outSeq, outArr);
+
+  schurMatVec(data, true, inSeq, outSeq);
+
+  VecResetArray(inSeq);
+  VecResetArray(outSeq);
+
+  VecRestoreArray(in, &inArr);
+  VecRestoreArray(out, &outArr);
+
+  VecDestroy(inSeq);
+  VecDestroy(outSeq);
+
   return 0;
 }
 
 PetscErrorCode highSchurMatMult(Mat mat, Vec in, Vec out) {
+  LocalData* data;
+  MatShellGetContext(mat, (void**)(&data));
+
+  schurMatVec(data, false, PETSC_NULL, PETSC_NULL);
+
   return 0;
 }
 
 PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {
+  OuterContext* ctx;
+  MatShellGetContext(mat, (void**)(&ctx));
+
   return 0;
 }
 
