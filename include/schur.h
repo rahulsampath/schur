@@ -76,7 +76,7 @@ void destroyRSDtree(RSDnode *root);
 
 void createLowAndHighComms(LocalData* data);
 
-void computeSchurDiag(LocalData* data);
+void createSchurDiag(LocalData* data);
 
 //Uses S ordering
 void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
