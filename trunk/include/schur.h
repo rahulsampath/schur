@@ -16,15 +16,15 @@ struct RSDnode {
 };
 
 struct LocalData {
+  int N; 
   MPI_Comm commAll, commLow, commHigh;
   Mat Kssl, Kssh;
   Mat Ksl, Ksh;
   Mat Kls, Khs;
   Mat Kll, Khh;
-  int N; 
-  PC outerPC;
   Mat outerMat, lowSchurMat, highSchurMat;
   KSP outerKsp, lowSchurKsp, highSchurKsp;
+  PC outerPC;
   Vec diagS; 
   DMMG* mgObj;
 };
@@ -43,6 +43,10 @@ struct OuterPCcontext {
 enum ListType {
   MG, O, L, H, S 
 };
+
+void createMG(LocalData* data);
+
+PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B);
 
 void createOuterPC(OuterPCcontext* ctx); 
 
