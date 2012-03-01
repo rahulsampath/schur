@@ -44,6 +44,14 @@ enum ListType {
   MG, O, L, H, S 
 };
 
+void createOuterContext(OuterContext* & ctx);
+
+void destroyOuterContext(OuterContext* ctx);
+
+void createLocalData(LocalData* & data);
+
+void destroyLocalData(LocalData* data);
+
 void createLocalMatrices(LocalData* data);
 
 void computeStencil();
