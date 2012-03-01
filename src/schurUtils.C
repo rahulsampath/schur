@@ -9,6 +9,51 @@
 extern double stencil[4][4];
 
 void zeroBoundary(LocalData* data, Vec vec) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+  PetscScalar* arr;
+  VecGetArray(vec, &arr);
+
+  int oxs, onx;
+  if(rank == 0) {
+    oxs = 0;
+    onx = data->N;
+  } else {
+    oxs = 1;
+    onx = (data->N) - 1;
+  }
+
+  //Left
+  if(rank == 0) {
+    for(int yi = 0; yi < (data->N); ++yi) {
+      int xi = oxs;
+      arr[(yi*onx) + (xi - oxs)] = 0;
+    }//end for yi
+  }
+
+  //Right
+  if(rank == (npes - 1)) {
+    for(int yi = 0; yi < (data->N); ++yi) {
+      int xi = (oxs + onx) - 1;
+      arr[(yi*onx) + (xi - oxs)] = 0;
+    }//end for yi
+  }
+
+  //Top
+  for(int xi = oxs; xi < (oxs + onx); ++xi) {
+    int yi = (data->N) - 1;
+    arr[(yi*onx) + (xi - oxs)] = 0;
+  }//end for xi
+
+  //Bottom
+  for(int xi = oxs; xi < (oxs + onx); ++xi) {
+    int yi = 0;
+    arr[(yi*onx) + (xi - oxs)] = 0;
+  }//end for xi
+
+  VecRestoreArray(vec, &arr);
 }
 
 void computeStencil() {
