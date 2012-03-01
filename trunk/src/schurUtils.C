@@ -13,6 +13,176 @@ void computeStencil() {
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
 }
 
+void createOuterContext(OuterContext* & ctx) {
+  int rank;
+  int npes;
+  MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+  MPI_Comm_size(PETSC_COMM_WORLD, &npes);
+  ctx = new OuterContext;
+  createLocalData(ctx->data);
+  createRSDtree(ctx->root, rank, npes);
+}
+
+void destroyOuterContext(OuterContext* ctx) {
+  if(ctx->data) {
+    destroyLocalData(ctx->data);
+  }
+  if(ctx->root) {
+    destroyRSDtree(ctx->root);
+  }
+  delete ctx;
+}
+
+void createLocalData(LocalData* & data) {
+  data = new LocalData;
+  MPI_Comm_dup(PETSC_COMM_WORLD, &(data->commAll));
+}
+
+void destroyLocalData(LocalData* data) {
+  if(data->commAll) {
+    MPI_Comm_free(&(data->commAll));
+  }
+  if(data->commLow) {
+    MPI_Comm_free(&(data->commLow));
+  }
+  if(data->commHigh) {
+    MPI_Comm_free(&(data->commHigh));
+  }
+  if(data->Kssl) {
+    MatDestroy(data->Kssl);
+  }
+  if(data->Kssh) {
+    MatDestroy(data->Kssh);
+  }
+  if(data->Ksl) {
+    MatDestroy(data->Ksl);
+  }
+  if(data->Ksh) {
+    MatDestroy(data->Ksh);
+  }
+  if(data->Kls) {
+    MatDestroy(data->Kls);
+  }
+  if(data->Khs) {
+    MatDestroy(data->Khs);
+  }
+  if(data->Kll) {
+    MatDestroy(data->Kll);
+  }
+  if(data->Khh) {
+    MatDestroy(data->Khh);
+  }
+  if(data->outerMat) {
+    MatDestroy(data->outerMat);
+  }
+  if(data->lowSchurMat) {
+    MatDestroy(data->lowSchurMat);
+  }
+  if(data->highSchurMat) {
+    MatDestroy(data->highSchurMat);
+  }
+  if(data->diagS) {
+    VecDestroy(data->diagS);
+  }
+  if(data->outerPC) {
+    PCDestroy(data->outerPC);
+  }
+  if(data->outerKsp) {
+    KSPDestroy(data->outerKsp);
+  }
+  if(data->lowSchurKsp) {
+    KSPDestroy(data->lowSchurKsp);
+  }
+  if(data->highSchurKsp) {
+    KSPDestroy(data->highSchurKsp);
+  }
+  if(data->mgObj) {
+    DMMGDestroy(data->mgObj);
+  }
+  delete data;
+}
+
+void createRSDtree(RSDnode *& root, int rank, int npes) {
+  root = new RSDnode;
+  root->rankForCurrLevel = rank;
+  root->npesForCurrLevel = npes;
+  if(npes > 1) {
+    if(rank < (npes/2)) {
+      createRSDtree(root->child, rank, (npes/2));
+    } else {
+      createRSDtree(root->child, (rank - (npes/2)), (npes/2));
+    }
+  } else {
+    root->child = NULL;
+  }
+}
+
+void destroyRSDtree(RSDnode *root) {
+  if(root->child) {
+    destroyRSDtree(root->child);
+  }
+  delete root;  
+}
+
+void createLowAndHighComms(LocalData* data) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+  MPI_Group groupAll;
+  MPI_Comm_group(data->commAll, &groupAll);
+
+  if((rank%2) == 0) {
+    if(rank < (npes - 1)) {
+      int lowRanks[2];
+      lowRanks[0] = rank;
+      lowRanks[1] = rank + 1;
+      MPI_Group lowGroup;
+      MPI_Group_incl(groupAll, 2, lowRanks, &lowGroup);
+      MPI_Comm_create(data->commAll, lowGroup, &(data->commLow));
+      MPI_Group_free(&lowGroup);
+    } else {
+      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commLow));
+    }
+  } else {
+    int highRanks[2];
+    highRanks[0] = rank - 1;
+    highRanks[1] = rank;
+    MPI_Group highGroup;
+    MPI_Group_incl(groupAll, 2, highRanks, &highGroup);
+    MPI_Comm_create(data->commAll, highGroup, &(data->commHigh));
+    MPI_Group_free(&highGroup);
+  }
+
+  if((rank%2) == 0) {
+    if(rank > 0) {
+      int highRanks[2];
+      highRanks[0] = rank - 1;
+      highRanks[1] = rank;
+      MPI_Group highGroup;
+      MPI_Group_incl(groupAll, 2, highRanks, &highGroup);
+      MPI_Comm_create(data->commAll, highGroup, &(data->commHigh));
+      MPI_Group_free(&highGroup);
+    } else {
+      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commHigh));
+    }
+  } else {
+    if(rank < (npes - 1)) {
+      int lowRanks[2];
+      lowRanks[0] = rank;
+      lowRanks[1] = rank + 1;
+      MPI_Group lowGroup;
+      MPI_Group_incl(groupAll, 2, lowRanks, &lowGroup);
+      MPI_Comm_create(data->commAll, lowGroup, &(data->commLow));
+      MPI_Group_free(&lowGroup);
+    } else {
+      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commLow));
+    }
+  }
+
+  MPI_Group_free(&groupAll);
+}
+
 void createLocalMatrices(LocalData* data) {
 }
 
@@ -833,87 +1003,5 @@ void createSchurDiag(LocalData* data) {
     MPI_Wait(&requestH, &status);
   }
 }
-
-void destroyRSDtree(RSDnode *root) {
-  if(root->child) {
-    destroyRSDtree(root->child);
-  }
-  delete root;  
-}
-
-void createRSDtree(RSDnode *& root, int rank, int npes) {
-  root = new RSDnode;
-  root->rankForCurrLevel = rank;
-  root->npesForCurrLevel = npes;
-  if(npes > 1) {
-    if(rank < (npes/2)) {
-      createRSDtree(root->child, rank, (npes/2));
-    } else {
-      createRSDtree(root->child, (rank - (npes/2)), (npes/2));
-    }
-  } else {
-    root->child = NULL;
-  }
-}
-
-void createLowAndHighComms(LocalData* data) {
-  int rank, npes;
-  MPI_Comm_rank(data->commAll, &rank);
-  MPI_Comm_size(data->commAll, &npes);
-
-  MPI_Group groupAll;
-  MPI_Comm_group(data->commAll, &groupAll);
-
-  if((rank%2) == 0) {
-    if(rank < (npes - 1)) {
-      int lowRanks[2];
-      lowRanks[0] = rank;
-      lowRanks[1] = rank + 1;
-      MPI_Group lowGroup;
-      MPI_Group_incl(groupAll, 2, lowRanks, &lowGroup);
-      MPI_Comm_create(data->commAll, lowGroup, &(data->commLow));
-      MPI_Group_free(&lowGroup);
-    } else {
-      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commLow));
-    }
-  } else {
-    int highRanks[2];
-    highRanks[0] = rank - 1;
-    highRanks[1] = rank;
-    MPI_Group highGroup;
-    MPI_Group_incl(groupAll, 2, highRanks, &highGroup);
-    MPI_Comm_create(data->commAll, highGroup, &(data->commHigh));
-    MPI_Group_free(&highGroup);
-  }
-
-  if((rank%2) == 0) {
-    if(rank > 0) {
-      int highRanks[2];
-      highRanks[0] = rank - 1;
-      highRanks[1] = rank;
-      MPI_Group highGroup;
-      MPI_Group_incl(groupAll, 2, highRanks, &highGroup);
-      MPI_Comm_create(data->commAll, highGroup, &(data->commHigh));
-      MPI_Group_free(&highGroup);
-    } else {
-      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commHigh));
-    }
-  } else {
-    if(rank < (npes - 1)) {
-      int lowRanks[2];
-      lowRanks[0] = rank;
-      lowRanks[1] = rank + 1;
-      MPI_Group lowGroup;
-      MPI_Group_incl(groupAll, 2, lowRanks, &lowGroup);
-      MPI_Comm_create(data->commAll, lowGroup, &(data->commLow));
-      MPI_Group_free(&lowGroup);
-    } else {
-      MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commLow));
-    }
-  }
-
-  MPI_Group_free(&groupAll);
-}
-
 
 
