@@ -44,7 +44,9 @@ enum ListType {
   MG, O, L, H, S 
 };
 
-PetscErrorCode dummyMatDestroy(Mat mat);
+void createLocalMatrices(LocalData* data);
+
+void computeStencil();
 
 void createOuterMat(OuterContext* ctx);
 
@@ -65,6 +67,8 @@ void createMG(LocalData* data);
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B);
 
 void createOuterPC(OuterContext* ctx); 
+
+PetscErrorCode outerPCapply(void* ctx, Vec in, Vec out);
 
 void createOuterKsp(LocalData* data);
 
@@ -89,8 +93,6 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut);
 
 //Uses O ordering
 void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u);
-
-PetscErrorCode outerPCapply(void* ctx, Vec in, Vec out);
 
 //This only sets the relevant values. It leaves the other values untouched.
 template<ListType fromType, ListType toType>

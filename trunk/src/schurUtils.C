@@ -6,6 +6,14 @@
 #include <vector>
 #include "petscdmmg.h"
 
+extern double stencil[4][4];
+
+void computeStencil() {
+}
+
+void createLocalMatrices(LocalData* data) {
+}
+
 void createOuterKsp(LocalData* data) {
   KSPCreate(data->commAll, &(data->outerKsp));
   KSPSetOperators(data->outerKsp, data->outerMat,
@@ -34,7 +42,6 @@ void createOuterMat(OuterContext* ctx) {
   MatCreateShell(((ctx->data)->commAll), locSize, locSize,
       PETSC_DETERMINE, PETSC_DETERMINE, ctx, &mat);
   MatShellSetOperation(mat, MATOP_MULT, (void(*)(void))(&outerMatMult));
-  MatShellSetOperation(mat, MATOP_DESTROY, (void(*)(void))(&dummyMatDestroy));
 
   (ctx->data)->outerMat = mat;
 }
@@ -72,13 +79,11 @@ void createSchurMat(LocalData* data) {
   if(lowMat) {
     MatShellSetOperation(lowMat, MATOP_MULT, (void(*)(void))(&lowSchurMatMult));
     MatShellSetOperation(lowMat, MATOP_GET_DIAGONAL, (void(*)(void))(&lowSchurMatDiag));
-    MatShellSetOperation(lowMat, MATOP_DESTROY, (void(*)(void))(&dummyMatDestroy));
   }
 
   if(highMat) {
     MatShellSetOperation(highMat, MATOP_MULT, (void(*)(void))(&highSchurMatMult));
     MatShellSetOperation(highMat, MATOP_GET_DIAGONAL, (void(*)(void))(&highSchurMatDiag));
-    MatShellSetOperation(highMat, MATOP_DESTROY, (void(*)(void))(&dummyMatDestroy));
   }
 
   data->lowSchurMat = lowMat;
@@ -113,11 +118,6 @@ void createOuterPC(OuterContext* ctx) {
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
   assert(J == B);
 
-  return 0;
-}
-
-PetscErrorCode dummyMatDestroy(Mat mat) {
-  //Nothing to be done here.
   return 0;
 }
 
