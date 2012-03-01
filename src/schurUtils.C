@@ -8,6 +8,9 @@
 
 extern double stencil[4][4];
 
+void zeroBoundary(LocalData* data, Vec vec) {
+}
+
 void computeStencil() {
   const double gaussWts[] = { 1.0, 1.0 };
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
@@ -24,6 +27,7 @@ void createOuterContext(OuterContext* & ctx) {
   createOuterMat(ctx);
   createOuterPC(ctx);
   createOuterKsp(ctx);
+  MatGetVecs(ctx->outerMat, &(ctx->outerSol), &(ctx->outerRhs));
 }
 
 void destroyOuterContext(OuterContext* ctx) {
@@ -41,6 +45,12 @@ void destroyOuterContext(OuterContext* ctx) {
   }
   if(ctx->outerKsp) {
     KSPDestroy(ctx->outerKsp);
+  }
+  if(ctx->outerSol) {
+    VecDestroy(ctx->outerSol);
+  }
+  if(ctx->outerRhs) {
+    VecDestroy(ctx->outerRhs);
   }
   delete ctx;
 }

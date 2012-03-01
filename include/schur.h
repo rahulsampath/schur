@@ -34,6 +34,8 @@ struct OuterContext {
   Mat outerMat;
   KSP outerKsp;
   PC outerPC;
+  Vec outerSol;
+  Vec outerRhs;
 };
 
 //MG = Multigrid (includes 0 dirichlet on both ends)
@@ -45,6 +47,8 @@ struct OuterContext {
 enum ListType {
   MG, O, L, H, S 
 };
+
+void zeroBoundary(LocalData* data, Vec vec);
 
 void createOuterContext(OuterContext* & ctx);
 
