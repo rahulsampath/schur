@@ -9,6 +9,8 @@
 extern double stencil[4][4];
 
 void computeStencil() {
+  const double gaussWts[] = { 1.0, 1.0 };
+  const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
 }
 
 void createLocalMatrices(LocalData* data) {
