@@ -6,6 +6,17 @@
 #include <vector>
 #include "petscdmmg.h"
 
+void createOuterKsp(LocalData* data) {
+  KSPCreate(data->commAll, &(data->outerKsp));
+  KSPSetOperators(data->outerKsp, data->outerMat,
+      data->outerMat, SAME_NONZERO_PATTERN);
+  KSPSetType(data->outerKsp, KSPFGMRES);
+  KSPSetOptionsPrefix(data->outerKsp, "outer_");
+  KSPSetPC(data->outerKsp, data->outerPC);
+  KSPSetFromOptions(data->outerKsp);
+  KSPSetUp(data->outerKsp);
+}
+
 void createOuterMat(OuterContext* ctx) {
   int rank;
   MPI_Comm_rank(((ctx->data)->commAll), &rank);
@@ -106,6 +117,7 @@ PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
 }
 
 PetscErrorCode dummyMatDestroy(Mat mat) {
+  //Nothing to be done here.
   return 0;
 }
 
@@ -130,6 +142,7 @@ PetscErrorCode lowSchurMatDiag(Mat mat, Vec out) {
 }
 
 PetscErrorCode highSchurMatDiag(Mat mat, Vec out) {
+  //Nothing to be done here.
   return 0;
 }
 
@@ -238,17 +251,6 @@ PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
   VecDestroy(outSeq);
 
   return 0;
-}
-
-void createOuterKsp(LocalData* data) {
-  KSPCreate(data->commAll, &(data->outerKsp));
-  KSPSetOperators(data->outerKsp, data->outerMat,
-      data->outerMat, SAME_NONZERO_PATTERN);
-  KSPSetType(data->outerKsp, KSPFGMRES);
-  KSPSetOptionsPrefix(data->outerKsp, "outer_");
-  KSPSetPC(data->outerKsp, data->outerPC);
-  KSPSetFromOptions(data->outerKsp);
-  KSPSetUp(data->outerKsp);
 }
 
 void createInnerKsp(LocalData* data) {
