@@ -22,9 +22,8 @@ struct LocalData {
   Mat Ksl, Ksh;
   Mat Kls, Khs;
   Mat Kll, Khh;
-  Mat outerMat, lowSchurMat, highSchurMat;
-  KSP outerKsp, lowSchurKsp, highSchurKsp;
-  PC outerPC;
+  Mat lowSchurMat, highSchurMat;
+  KSP lowSchurKsp, highSchurKsp;
   Vec diagS; 
   DMMG* mgObj;
 };
@@ -32,6 +31,9 @@ struct LocalData {
 struct OuterContext {
   LocalData* data;
   RSDnode* root;
+  Mat outerMat;
+  KSP outerKsp;
+  PC outerPC;
 };
 
 //MG = Multigrid (includes 0 dirichlet on both ends)
@@ -78,7 +80,7 @@ void createOuterPC(OuterContext* ctx);
 
 PetscErrorCode outerPCapply(void* ctx, Vec in, Vec out);
 
-void createOuterKsp(LocalData* data);
+void createOuterKsp(OuterContext* ctx);
 
 void createInnerKsp(LocalData* data);
 
