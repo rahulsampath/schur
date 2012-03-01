@@ -21,6 +21,9 @@ void createOuterContext(OuterContext* & ctx) {
   ctx = new OuterContext;
   createLocalData(ctx->data);
   createRSDtree(ctx->root, rank, npes);
+  createOuterMat(ctx);
+  createOuterPC(ctx);
+  createOuterKsp(ctx);
 }
 
 void destroyOuterContext(OuterContext* ctx) {
@@ -30,12 +33,29 @@ void destroyOuterContext(OuterContext* ctx) {
   if(ctx->root) {
     destroyRSDtree(ctx->root);
   }
+  if(ctx->outerMat) {
+    MatDestroy(ctx->outerMat);
+  }
+  if(ctx->outerPC) {
+    PCDestroy(ctx->outerPC);
+  }
+  if(ctx->outerKsp) {
+    KSPDestroy(ctx->outerKsp);
+  }
   delete ctx;
 }
 
 void createLocalData(LocalData* & data) {
   data = new LocalData;
+  data->N = 17;
+  PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
   MPI_Comm_dup(PETSC_COMM_WORLD, &(data->commAll));
+  createLowAndHighComms(data);
+  createMG(data);
+  createLocalMatrices(data);
+  createSchurDiag(data);
+  createSchurMat(data);
+  createInnerKsp(data);
 }
 
 void destroyLocalData(LocalData* data) {
@@ -72,9 +92,6 @@ void destroyLocalData(LocalData* data) {
   if(data->Khh) {
     MatDestroy(data->Khh);
   }
-  if(data->outerMat) {
-    MatDestroy(data->outerMat);
-  }
   if(data->lowSchurMat) {
     MatDestroy(data->lowSchurMat);
   }
@@ -83,12 +100,6 @@ void destroyLocalData(LocalData* data) {
   }
   if(data->diagS) {
     VecDestroy(data->diagS);
-  }
-  if(data->outerPC) {
-    PCDestroy(data->outerPC);
-  }
-  if(data->outerKsp) {
-    KSPDestroy(data->outerKsp);
   }
   if(data->lowSchurKsp) {
     KSPDestroy(data->lowSchurKsp);
@@ -186,15 +197,15 @@ void createLowAndHighComms(LocalData* data) {
 void createLocalMatrices(LocalData* data) {
 }
 
-void createOuterKsp(LocalData* data) {
-  KSPCreate(data->commAll, &(data->outerKsp));
-  KSPSetOperators(data->outerKsp, data->outerMat,
-      data->outerMat, SAME_NONZERO_PATTERN);
-  KSPSetType(data->outerKsp, KSPFGMRES);
-  KSPSetOptionsPrefix(data->outerKsp, "outer_");
-  KSPSetPC(data->outerKsp, data->outerPC);
-  KSPSetFromOptions(data->outerKsp);
-  KSPSetUp(data->outerKsp);
+void createOuterKsp(OuterContext* ctx) {
+  KSPCreate((ctx->data)->commAll, &(ctx->outerKsp));
+  KSPSetOperators(ctx->outerKsp, ctx->outerMat,
+      ctx->outerMat, SAME_NONZERO_PATTERN);
+  KSPSetType(ctx->outerKsp, KSPFGMRES);
+  KSPSetOptionsPrefix(ctx->outerKsp, "outer_");
+  KSPSetPC(ctx->outerKsp, ctx->outerPC);
+  KSPSetFromOptions(ctx->outerKsp);
+  KSPSetUp(ctx->outerKsp);
 }
 
 void createOuterMat(OuterContext* ctx) {
@@ -215,7 +226,7 @@ void createOuterMat(OuterContext* ctx) {
       PETSC_DETERMINE, PETSC_DETERMINE, ctx, &mat);
   MatShellSetOperation(mat, MATOP_MULT, (void(*)(void))(&outerMatMult));
 
-  (ctx->data)->outerMat = mat;
+  ctx->outerMat = mat;
 }
 
 void createSchurMat(LocalData* data) {
@@ -281,10 +292,10 @@ void createMG(LocalData* data) {
 }
 
 void createOuterPC(OuterContext* ctx) {
-  PCCreate(((ctx->data)->commAll), &((ctx->data)->outerPC));
-  PCSetType(((ctx->data)->outerPC), PCSHELL);
-  PCShellSetContext(((ctx->data)->outerPC), ctx);
-  PCShellSetApply(((ctx->data)->outerPC), &outerPCapply);
+  PCCreate(((ctx->data)->commAll), &(ctx->outerPC));
+  PCSetType(ctx->outerPC, PCSHELL);
+  PCShellSetContext(ctx->outerPC, ctx);
+  PCShellSetApply(ctx->outerPC, &outerPCapply);
 }
 
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
