@@ -367,6 +367,40 @@ void createOuterPC(OuterContext* ctx) {
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
   assert(J == B);
 
+  DA da = DMMGGetDA(&dmmg);
+
+  int N;
+  DAGetInfo(da, PETSC_NULL, &N, PETSC_NULL, PETSC_NULL, 
+      PETSC_NULL, PETSC_NULL, PETSC_NULL, 
+      PETSC_NULL, PETSC_NULL, PETSC_NULL, PETSC_NULL);
+
+  MatZeroEntries(J);
+
+  int Ne = N - 1;
+  for(int yi = 0; yi < Ne; ++yi) {
+    for(int xi = 0; xi < Ne; ++xi) {
+      int dofs[4];
+      dofs[0] = (yi*N) + xi;
+      dofs[1] = (yi*N) + xi + 1;
+      dofs[2] = ((yi + 1)*N) + xi;
+      dofs[3] = ((yi + 1)*N) + xi + 1;
+      for(int j = 0; j < 4; j++) {
+        for(int i = 0; i < 4; i++) {
+          MatSetValues(J, 1, &(dofs[j]), 1, &(dofs[i]),
+              &(stencil[j][i]), ADD_VALUES);
+        }//end i
+      }//end j
+    }//end xi
+  }//end yi
+
+  MatAssemblyBegin(J, MAT_FLUSH_ASSEMBLY);
+  MatAssemblyEnd(J, MAT_FLUSH_ASSEMBLY);
+
+  //ToDo: Dirichlet Correction 
+
+  MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
+
   return 0;
 }
 
