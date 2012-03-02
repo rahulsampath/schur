@@ -48,6 +48,10 @@ enum ListType {
   MG, O, L, H, S 
 };
 
+double dPhidPsi(int i, double eta);
+
+double dPhidEta(int i, double psi);
+
 void zeroBoundary(LocalData* data, Vec vec);
 
 void createOuterContext(OuterContext* & ctx);
