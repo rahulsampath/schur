@@ -130,6 +130,44 @@ void createLocalMatrices(LocalData* data) {
     MatAssemblyBegin(data->Kssl, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(data->Kssl, MAT_FINAL_ASSEMBLY);
 
+    for(int yi = 0; yi < Ne; ++yi) {
+      int sDofId[] = {1, 3};
+      int lDofId[] = {0, 2};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int si = 0; si < 2; si++) {
+        for(int li = 0; li < 2; li++) {
+          MatSetValue(data->Ksl, dofs[si], dofs[li], stencil[sDofId[si]][lDofId[li]], ADD_VALUES);
+          MatSetValue(data->Kls, dofs[li], dofs[si], stencil[lDofId[li]][sDofId[si]], ADD_VALUES);
+        }//end li
+      }//end si
+    }//end yi
+
+    MatAssemblyBegin(data->Ksl, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyBegin(data->Kls, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Ksl, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Kls, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Ksl, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, 0, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+
+    MatSetValue(data->Kls, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, 0, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Ksl, MAT_FINAL_ASSEMBLY);
+    MatAssemblyBegin(data->Kls, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Ksl, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Kls, MAT_FINAL_ASSEMBLY);
+
   } else {
     data->Kssl = PETSC_NULL;
     data->Ksl = PETSC_NULL;
