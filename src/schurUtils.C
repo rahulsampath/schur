@@ -8,6 +8,29 @@
 
 extern double stencil[4][4];
 
+void createLocalMatrices(LocalData* data) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+  if(rank > 0) {
+  } else {
+    data->Kssh = PETSC_NULL;
+    data->Ksh = PETSC_NULL;
+    data->Khs = PETSC_NULL;
+    data->Khh = PETSC_NULL;
+  }
+
+  if(rank < (npes - 1)) {
+  } else {
+    data->Kssl = PETSC_NULL;
+    data->Ksl = PETSC_NULL;
+    data->Kls = PETSC_NULL;
+    data->Kll = PETSC_NULL;
+  }
+
+}
+
 void zeroBoundary(LocalData* data, Vec vec) {
   int rank, npes;
   MPI_Comm_rank(data->commAll, &rank);
@@ -125,13 +148,13 @@ void createLocalData(LocalData* & data) {
 }
 
 void destroyLocalData(LocalData* data) {
-  if(data->commAll) {
+  if(data->commAll != MPI_COMM_NULL) {
     MPI_Comm_free(&(data->commAll));
   }
-  if(data->commLow) {
+  if(data->commLow != MPI_COMM_NULL) {
     MPI_Comm_free(&(data->commLow));
   }
-  if(data->commHigh) {
+  if(data->commHigh != MPI_COMM_NULL) {
     MPI_Comm_free(&(data->commHigh));
   }
   if(data->Kssl) {
@@ -258,9 +281,6 @@ void createLowAndHighComms(LocalData* data) {
   }
 
   MPI_Group_free(&groupAll);
-}
-
-void createLocalMatrices(LocalData* data) {
 }
 
 void createOuterKsp(OuterContext* ctx) {
