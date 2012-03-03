@@ -24,6 +24,32 @@ void createLocalMatrices(LocalData* data) {
     MatZeroEntries(data->Ksh);
     MatZeroEntries(data->Khs);
     MatZeroEntries(data->Khh);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int dofId[] = {0, 2};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int j = 0; j < 2; j++) {
+        for(int i = 0; i < 2; i++) {
+          MatSetValue(data->Kssh, dofs[j], dofs[i], stencil[dofId[j]][dofId[i]], ADD_VALUES);
+        }//end i
+      }//end j
+    }//end yi
+
+    MatAssemblyBegin(data->Kssh, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Kssh, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Kssh, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, 0, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Kssh, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Kssh, MAT_FINAL_ASSEMBLY);
+
   } else {
     data->Kssh = PETSC_NULL;
     data->Ksh  = PETSC_NULL;
