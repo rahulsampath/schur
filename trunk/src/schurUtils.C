@@ -13,15 +13,59 @@ void createLocalMatrices(LocalData* data) {
   MPI_Comm_rank(data->commAll, &rank);
   MPI_Comm_size(data->commAll, &npes);
 
+  int Ne = (data->N) - 1;
+
   if(rank > 0) {
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kssh));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Ksh));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Khs));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Khh));
+    MatZeroEntries(data->Kssh);
+    MatZeroEntries(data->Ksh);
+    MatZeroEntries(data->Khs);
+    MatZeroEntries(data->Khh);
   } else {
     data->Kssh = PETSC_NULL;
-    data->Ksh = PETSC_NULL;
-    data->Khs = PETSC_NULL;
-    data->Khh = PETSC_NULL;
+    data->Ksh  = PETSC_NULL;
+    data->Khs  = PETSC_NULL;
+    data->Khh  = PETSC_NULL;
   }
 
   if(rank < (npes - 1)) {
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kssl));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Ksl));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kls));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kll));
+    MatZeroEntries(data->Kssl);
+    MatZeroEntries(data->Ksl);
+    MatZeroEntries(data->Kls);
+    MatZeroEntries(data->Kll);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int dofId[] = {1, 3};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int j = 0; j < 2; j++) {
+        for(int i = 0; i < 2; i++) {
+          MatSetValue(data->Kssl, dofs[j], dofs[i], stencil[dofId[j]][dofId[i]], ADD_VALUES);
+        }//end i
+      }//end j
+    }//end yi
+
+    MatAssemblyBegin(data->Kssl, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Kssl, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Kssl, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, 0, 0, 1.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Kssl, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Kssl, MAT_FINAL_ASSEMBLY);
+
   } else {
     data->Kssl = PETSC_NULL;
     data->Ksl = PETSC_NULL;
