@@ -88,6 +88,33 @@ void createLocalMatrices(LocalData* data) {
     MatAssemblyEnd(data->Ksh, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(data->Khs, MAT_FINAL_ASSEMBLY);
 
+    for(int yi = 0; yi < Ne; ++yi) {
+      int e1DofId[] = {0, 2};
+      int e2DofId[] = {1, 3};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int j = 0; j < 2; j++) {
+        for(int i = 0; i < 2; i++) {
+          MatSetValue(data->Khh, dofs[j], dofs[i], stencil[e1DofId[j]][e1DofId[i]], ADD_VALUES);
+          MatSetValue(data->Khh, dofs[j], dofs[i], stencil[e2DofId[j]][e2DofId[i]], ADD_VALUES);
+        }//end i
+      }//end j
+    }//end yi
+
+    MatAssemblyBegin(data->Khh, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Khh, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Khh, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Khh, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Khh, 0, 0, 1.0, INSERT_VALUES);
+    MatSetValue(data->Khh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khh, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Khh, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Khh, MAT_FINAL_ASSEMBLY);
+
   } else {
     data->Kssh = PETSC_NULL;
     data->Ksh  = PETSC_NULL;
@@ -167,6 +194,33 @@ void createLocalMatrices(LocalData* data) {
     MatAssemblyBegin(data->Kls, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(data->Ksl, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(data->Kls, MAT_FINAL_ASSEMBLY);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int e1DofId[] = {0, 2};
+      int e2DofId[] = {1, 3};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int j = 0; j < 2; j++) {
+        for(int i = 0; i < 2; i++) {
+          MatSetValue(data->Kll, dofs[j], dofs[i], stencil[e1DofId[j]][e1DofId[i]], ADD_VALUES);
+          MatSetValue(data->Kll, dofs[j], dofs[i], stencil[e2DofId[j]][e2DofId[i]], ADD_VALUES);
+        }//end i
+      }//end j
+    }//end yi
+
+    MatAssemblyBegin(data->Kll, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Kll, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Kll, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, 0, 0, 1.0, INSERT_VALUES);
+    MatSetValue(data->Kll, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Kll, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Kll, MAT_FINAL_ASSEMBLY);
 
   } else {
     data->Kssl = PETSC_NULL;
