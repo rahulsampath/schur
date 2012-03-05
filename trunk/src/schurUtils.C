@@ -5,299 +5,9 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include "petscsys.h"
 #include "petscdmmg.h"
 
 extern double stencil[4][4];
-
-extern PetscViewer viewer;
-
-void createLocalMatrices(LocalData* data) {
-  int rank, npes;
-  MPI_Comm_rank(data->commAll, &rank);
-  MPI_Comm_size(data->commAll, &npes);
-
-  int Ne = (data->N) - 1;
-
-  if(rank > 0) {
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kssh));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Ksh));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Khs));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Khh));
-    MatZeroEntries(data->Kssh);
-    MatZeroEntries(data->Ksh);
-    MatZeroEntries(data->Khs);
-    MatZeroEntries(data->Khh);
-
-    for(int yi = 0; yi < Ne; ++yi) {
-      int dofId[] = {0, 2};
-      int dofs[2];
-      dofs[0] = yi;
-      dofs[1] = yi + 1;
-      for(int j = 0; j < 2; j++) {
-        for(int i = 0; i < 2; i++) {
-          MatSetValue(data->Kssh, dofs[j], dofs[i], stencil[dofId[j]][dofId[i]], ADD_VALUES);
-        }//end i
-      }//end j
-    }//end yi
-
-    MatAssemblyBegin(data->Kssh, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyEnd(data->Kssh, MAT_FLUSH_ASSEMBLY);
-
-    MatSetValue(data->Kssh, 0, 1, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssh, 1, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssh, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssh, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
-
-    MatAssemblyBegin(data->Kssh, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(data->Kssh, MAT_FINAL_ASSEMBLY);
-
-    for(int yi = 0; yi < Ne; ++yi) {
-      int sDofId[] = {0, 2};
-      int hDofId[] = {1, 3};
-      int dofs[2];
-      dofs[0] = yi;
-      dofs[1] = yi + 1;
-      for(int si = 0; si < 2; si++) {
-        for(int hi = 0; hi < 2; hi++) {
-          MatSetValue(data->Ksh, dofs[si], dofs[hi], stencil[sDofId[si]][hDofId[hi]], ADD_VALUES);
-          MatSetValue(data->Khs, dofs[hi], dofs[si], stencil[hDofId[hi]][sDofId[si]], ADD_VALUES);
-        }//end hi
-      }//end si
-    }//end yi
-
-    MatAssemblyBegin(data->Ksh, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyBegin(data->Khs, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyEnd(data->Ksh, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyEnd(data->Khs, MAT_FLUSH_ASSEMBLY);
-
-    MatSetValue(data->Ksh, 0, 1, 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksh, 1, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksh, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksh, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
-
-    MatSetValue(data->Khs, 0, 1, 0.0, INSERT_VALUES);
-    MatSetValue(data->Khs, 1, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Khs, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Khs, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Khs, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Khs, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
-
-    MatAssemblyBegin(data->Ksh, MAT_FINAL_ASSEMBLY);
-    MatAssemblyBegin(data->Khs, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(data->Ksh, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(data->Khs, MAT_FINAL_ASSEMBLY);
-
-    for(int yi = 0; yi < Ne; ++yi) {
-      int e1DofId[] = {0, 2};
-      int e2DofId[] = {1, 3};
-      int dofs[2];
-      dofs[0] = yi;
-      dofs[1] = yi + 1;
-      for(int j = 0; j < 2; j++) {
-        for(int i = 0; i < 2; i++) {
-          MatSetValue(data->Khh, dofs[j], dofs[i], stencil[e1DofId[j]][e1DofId[i]], ADD_VALUES);
-          MatSetValue(data->Khh, dofs[j], dofs[i], stencil[e2DofId[j]][e2DofId[i]], ADD_VALUES);
-        }//end i
-      }//end j
-    }//end yi
-
-    MatAssemblyBegin(data->Khh, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyEnd(data->Khh, MAT_FLUSH_ASSEMBLY);
-
-    MatSetValue(data->Khh, 0, 1, 0.0, INSERT_VALUES);
-    MatSetValue(data->Khh, 1, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Khh, 0, 0, 1.0, INSERT_VALUES);
-    MatSetValue(data->Khh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Khh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Khh, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
-
-    MatAssemblyBegin(data->Khh, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(data->Khh, MAT_FINAL_ASSEMBLY);
-
-  } else {
-    data->Kssh = PETSC_NULL;
-    data->Ksh  = PETSC_NULL;
-    data->Khs  = PETSC_NULL;
-    data->Khh  = PETSC_NULL;
-  }
-
-  if(rank < (npes - 1)) {
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kssl));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Ksl));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kls));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kll));
-    MatZeroEntries(data->Kssl);
-    MatZeroEntries(data->Ksl);
-    MatZeroEntries(data->Kls);
-    MatZeroEntries(data->Kll);
-
-    for(int yi = 0; yi < Ne; ++yi) {
-      int dofId[] = {1, 3};
-      int dofs[2];
-      dofs[0] = yi;
-      dofs[1] = yi + 1;
-      for(int j = 0; j < 2; j++) {
-        for(int i = 0; i < 2; i++) {
-          MatSetValue(data->Kssl, dofs[j], dofs[i], stencil[dofId[j]][dofId[i]], ADD_VALUES);
-        }//end i
-      }//end j
-    }//end yi
-
-    MatAssemblyBegin(data->Kssl, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyEnd(data->Kssl, MAT_FLUSH_ASSEMBLY);
-
-    MatSetValue(data->Kssl, 0, 1, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssl, 1, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssl, 0, 0, 1.0, INSERT_VALUES);
-    MatSetValue(data->Kssl, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssl, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssl, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
-
-    MatAssemblyBegin(data->Kssl, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(data->Kssl, MAT_FINAL_ASSEMBLY);
-
-    for(int yi = 0; yi < Ne; ++yi) {
-      int sDofId[] = {1, 3};
-      int lDofId[] = {0, 2};
-      int dofs[2];
-      dofs[0] = yi;
-      dofs[1] = yi + 1;
-      for(int si = 0; si < 2; si++) {
-        for(int li = 0; li < 2; li++) {
-          MatSetValue(data->Ksl, dofs[si], dofs[li], stencil[sDofId[si]][lDofId[li]], ADD_VALUES);
-          MatSetValue(data->Kls, dofs[li], dofs[si], stencil[lDofId[li]][sDofId[si]], ADD_VALUES);
-        }//end li
-      }//end si
-    }//end yi
-
-    MatAssemblyBegin(data->Ksl, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyBegin(data->Kls, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyEnd(data->Ksl, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyEnd(data->Kls, MAT_FLUSH_ASSEMBLY);
-
-    MatSetValue(data->Ksl, 0, 1, 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksl, 1, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksl, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksl, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksl, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksl, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
-
-    MatSetValue(data->Kls, 0, 1, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kls, 1, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kls, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kls, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kls, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kls, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
-
-    MatAssemblyBegin(data->Ksl, MAT_FINAL_ASSEMBLY);
-    MatAssemblyBegin(data->Kls, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(data->Ksl, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(data->Kls, MAT_FINAL_ASSEMBLY);
-
-    for(int yi = 0; yi < Ne; ++yi) {
-      int e1DofId[] = {0, 2};
-      int e2DofId[] = {1, 3};
-      int dofs[2];
-      dofs[0] = yi;
-      dofs[1] = yi + 1;
-      for(int j = 0; j < 2; j++) {
-        for(int i = 0; i < 2; i++) {
-          MatSetValue(data->Kll, dofs[j], dofs[i], stencil[e1DofId[j]][e1DofId[i]], ADD_VALUES);
-          MatSetValue(data->Kll, dofs[j], dofs[i], stencil[e2DofId[j]][e2DofId[i]], ADD_VALUES);
-        }//end i
-      }//end j
-    }//end yi
-
-    MatAssemblyBegin(data->Kll, MAT_FLUSH_ASSEMBLY);
-    MatAssemblyEnd(data->Kll, MAT_FLUSH_ASSEMBLY);
-
-    MatSetValue(data->Kll, 0, 1, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kll, 1, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kll, 0, 0, 1.0, INSERT_VALUES);
-    MatSetValue(data->Kll, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kll, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kll, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
-
-    MatAssemblyBegin(data->Kll, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(data->Kll, MAT_FINAL_ASSEMBLY);
-
-  } else {
-    data->Kssl = PETSC_NULL;
-    data->Ksl = PETSC_NULL;
-    data->Kls = PETSC_NULL;
-    data->Kll = PETSC_NULL;
-  }
-
-}
-
-void zeroBoundary(LocalData* data, Vec vec) {
-  int rank, npes;
-  MPI_Comm_rank(data->commAll, &rank);
-  MPI_Comm_size(data->commAll, &npes);
-
-  PetscScalar* arr;
-  VecGetArray(vec, &arr);
-
-  int oxs, onx;
-  if(rank == 0) {
-    oxs = 0;
-    onx = data->N;
-  } else {
-    oxs = 1;
-    onx = (data->N) - 1;
-  }
-
-  //Left
-  if(rank == 0) {
-    for(int yi = 0; yi < (data->N); ++yi) {
-      int xi = oxs;
-      arr[(yi*onx) + (xi - oxs)] = 0;
-    }//end for yi
-  }
-
-  //Right
-  if(rank == (npes - 1)) {
-    for(int yi = 0; yi < (data->N); ++yi) {
-      int xi = (oxs + onx) - 1;
-      arr[(yi*onx) + (xi - oxs)] = 0;
-    }//end for yi
-  }
-
-  //Top
-  for(int xi = oxs; xi < (oxs + onx); ++xi) {
-    int yi = (data->N) - 1;
-    arr[(yi*onx) + (xi - oxs)] = 0;
-  }//end for xi
-
-  //Bottom
-  for(int xi = oxs; xi < (oxs + onx); ++xi) {
-    int yi = 0;
-    arr[(yi*onx) + (xi - oxs)] = 0;
-  }//end for xi
-
-  VecRestoreArray(vec, &arr);
-}
-
-void computeStencil() {
-  const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
-  for(int j = 0; j < 4; ++j) {
-    for(int i = 0; i < 4; ++i) {
-      stencil[j][i] = 0.0;
-      for(int n = 0; n < 2; ++n) {
-        double eta = gaussPts[n];
-        for(int m = 0; m < 2; ++m) {
-          double psi = gaussPts[m];
-          stencil[j][i] += ( (dPhidPsi(j, eta)*dPhidPsi(i, eta)) + (dPhidEta(j, psi)*dPhidEta(i, psi)) );
-        }//end m
-      }//end n
-    }//end i
-  }//end j
-}
 
 void createOuterContext(OuterContext* & ctx) {
   int rank;
@@ -503,12 +213,12 @@ void createLowAndHighComms(LocalData* data) {
 
 void createOuterKsp(OuterContext* ctx) {
   KSPCreate((ctx->data)->commAll, &(ctx->outerKsp));
-  KSPSetOperators(ctx->outerKsp, ctx->outerMat,
-      ctx->outerMat, SAME_NONZERO_PATTERN);
   KSPSetType(ctx->outerKsp, KSPFGMRES);
   KSPSetTolerances(ctx->outerKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 50);
   KSPSetOptionsPrefix(ctx->outerKsp, "outer_");
   KSPSetPC(ctx->outerKsp, ctx->outerPC);
+  KSPSetOperators(ctx->outerKsp, ctx->outerMat,
+      ctx->outerMat, SAME_NONZERO_PATTERN);
   KSPSetFromOptions(ctx->outerKsp);
   KSPSetUp(ctx->outerKsp);
 }
@@ -1541,6 +1251,293 @@ double dPhidEta(int i, double psi) {
     assert(false);
   }
   return 0;
+
+}
+
+void zeroBoundary(LocalData* data, Vec vec) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+  PetscScalar* arr;
+  VecGetArray(vec, &arr);
+
+  int oxs, onx;
+  if(rank == 0) {
+    oxs = 0;
+    onx = data->N;
+  } else {
+    oxs = 1;
+    onx = (data->N) - 1;
+  }
+
+  //Left
+  if(rank == 0) {
+    for(int yi = 0; yi < (data->N); ++yi) {
+      int xi = oxs;
+      arr[(yi*onx) + (xi - oxs)] = 0;
+    }//end for yi
+  }
+
+  //Right
+  if(rank == (npes - 1)) {
+    for(int yi = 0; yi < (data->N); ++yi) {
+      int xi = (oxs + onx) - 1;
+      arr[(yi*onx) + (xi - oxs)] = 0;
+    }//end for yi
+  }
+
+  //Top
+  for(int xi = oxs; xi < (oxs + onx); ++xi) {
+    int yi = (data->N) - 1;
+    arr[(yi*onx) + (xi - oxs)] = 0;
+  }//end for xi
+
+  //Bottom
+  for(int xi = oxs; xi < (oxs + onx); ++xi) {
+    int yi = 0;
+    arr[(yi*onx) + (xi - oxs)] = 0;
+  }//end for xi
+
+  VecRestoreArray(vec, &arr);
+}
+
+void computeStencil() {
+  const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
+  for(int j = 0; j < 4; ++j) {
+    for(int i = 0; i < 4; ++i) {
+      stencil[j][i] = 0.0;
+      for(int n = 0; n < 2; ++n) {
+        double eta = gaussPts[n];
+        for(int m = 0; m < 2; ++m) {
+          double psi = gaussPts[m];
+          stencil[j][i] += ( (dPhidPsi(j, eta)*dPhidPsi(i, eta)) + (dPhidEta(j, psi)*dPhidEta(i, psi)) );
+        }//end m
+      }//end n
+    }//end i
+  }//end j
+}
+
+void createLocalMatrices(LocalData* data) {
+  int rank, npes;
+  MPI_Comm_rank(data->commAll, &rank);
+  MPI_Comm_size(data->commAll, &npes);
+
+  int Ne = (data->N) - 1;
+
+  if(rank > 0) {
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kssh));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Ksh));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Khs));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Khh));
+    MatZeroEntries(data->Kssh);
+    MatZeroEntries(data->Ksh);
+    MatZeroEntries(data->Khs);
+    MatZeroEntries(data->Khh);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int dofId[] = {0, 2};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int j = 0; j < 2; j++) {
+        for(int i = 0; i < 2; i++) {
+          MatSetValue(data->Kssh, dofs[j], dofs[i], stencil[dofId[j]][dofId[i]], ADD_VALUES);
+        }//end i
+      }//end j
+    }//end yi
+
+    MatAssemblyBegin(data->Kssh, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Kssh, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Kssh, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, 0, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Kssh, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Kssh, MAT_FINAL_ASSEMBLY);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int sDofId[] = {0, 2};
+      int hDofId[] = {1, 3};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int si = 0; si < 2; si++) {
+        for(int hi = 0; hi < 2; hi++) {
+          MatSetValue(data->Ksh, dofs[si], dofs[hi], stencil[sDofId[si]][hDofId[hi]], ADD_VALUES);
+          MatSetValue(data->Khs, dofs[hi], dofs[si], stencil[hDofId[hi]][sDofId[si]], ADD_VALUES);
+        }//end hi
+      }//end si
+    }//end yi
+
+    MatAssemblyBegin(data->Ksh, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyBegin(data->Khs, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Ksh, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Khs, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Ksh, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksh, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksh, 0, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksh, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+
+    MatSetValue(data->Khs, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Khs, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Khs, 0, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Khs, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khs, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khs, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Ksh, MAT_FINAL_ASSEMBLY);
+    MatAssemblyBegin(data->Khs, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Ksh, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Khs, MAT_FINAL_ASSEMBLY);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int e1DofId[] = {0, 2};
+      int e2DofId[] = {1, 3};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int j = 0; j < 2; j++) {
+        for(int i = 0; i < 2; i++) {
+          MatSetValue(data->Khh, dofs[j], dofs[i], stencil[e1DofId[j]][e1DofId[i]], ADD_VALUES);
+          MatSetValue(data->Khh, dofs[j], dofs[i], stencil[e2DofId[j]][e2DofId[i]], ADD_VALUES);
+        }//end i
+      }//end j
+    }//end yi
+
+    MatAssemblyBegin(data->Khh, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Khh, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Khh, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Khh, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Khh, 0, 0, 1.0, INSERT_VALUES);
+    MatSetValue(data->Khh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khh, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Khh, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Khh, MAT_FINAL_ASSEMBLY);
+
+  } else {
+    data->Kssh = PETSC_NULL;
+    data->Ksh  = PETSC_NULL;
+    data->Khs  = PETSC_NULL;
+    data->Khh  = PETSC_NULL;
+  }
+
+  if(rank < (npes - 1)) {
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kssl));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Ksl));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kls));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kll));
+    MatZeroEntries(data->Kssl);
+    MatZeroEntries(data->Ksl);
+    MatZeroEntries(data->Kls);
+    MatZeroEntries(data->Kll);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int dofId[] = {1, 3};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int j = 0; j < 2; j++) {
+        for(int i = 0; i < 2; i++) {
+          MatSetValue(data->Kssl, dofs[j], dofs[i], stencil[dofId[j]][dofId[i]], ADD_VALUES);
+        }//end i
+      }//end j
+    }//end yi
+
+    MatAssemblyBegin(data->Kssl, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Kssl, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Kssl, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, 0, 0, 1.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssl, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Kssl, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Kssl, MAT_FINAL_ASSEMBLY);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int sDofId[] = {1, 3};
+      int lDofId[] = {0, 2};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int si = 0; si < 2; si++) {
+        for(int li = 0; li < 2; li++) {
+          MatSetValue(data->Ksl, dofs[si], dofs[li], stencil[sDofId[si]][lDofId[li]], ADD_VALUES);
+          MatSetValue(data->Kls, dofs[li], dofs[si], stencil[lDofId[li]][sDofId[si]], ADD_VALUES);
+        }//end li
+      }//end si
+    }//end yi
+
+    MatAssemblyBegin(data->Ksl, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyBegin(data->Kls, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Ksl, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Kls, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Ksl, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, 0, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+
+    MatSetValue(data->Kls, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, 0, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Ksl, MAT_FINAL_ASSEMBLY);
+    MatAssemblyBegin(data->Kls, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Ksl, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Kls, MAT_FINAL_ASSEMBLY);
+
+    for(int yi = 0; yi < Ne; ++yi) {
+      int e1DofId[] = {0, 2};
+      int e2DofId[] = {1, 3};
+      int dofs[2];
+      dofs[0] = yi;
+      dofs[1] = yi + 1;
+      for(int j = 0; j < 2; j++) {
+        for(int i = 0; i < 2; i++) {
+          MatSetValue(data->Kll, dofs[j], dofs[i], stencil[e1DofId[j]][e1DofId[i]], ADD_VALUES);
+          MatSetValue(data->Kll, dofs[j], dofs[i], stencil[e2DofId[j]][e2DofId[i]], ADD_VALUES);
+        }//end i
+      }//end j
+    }//end yi
+
+    MatAssemblyBegin(data->Kll, MAT_FLUSH_ASSEMBLY);
+    MatAssemblyEnd(data->Kll, MAT_FLUSH_ASSEMBLY);
+
+    MatSetValue(data->Kll, 0, 1, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, 1, 0, 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, 0, 0, 1.0, INSERT_VALUES);
+    MatSetValue(data->Kll, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
+
+    MatAssemblyBegin(data->Kll, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(data->Kll, MAT_FINAL_ASSEMBLY);
+
+  } else {
+    data->Kssl = PETSC_NULL;
+    data->Ksl = PETSC_NULL;
+    data->Kls = PETSC_NULL;
+    data->Kll = PETSC_NULL;
+  }
 
 }
 
