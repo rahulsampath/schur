@@ -2,11 +2,15 @@
 #include "mpi.h"
 #include "schur.h"
 #include <cassert>
+#include <iostream>
 #include <cmath>
 #include <vector>
+#include "petscsys.h"
 #include "petscdmmg.h"
 
 extern double stencil[4][4];
+
+extern PetscViewer viewer;
 
 void createLocalMatrices(LocalData* data) {
   int rank, npes;
@@ -300,12 +304,18 @@ void createOuterContext(OuterContext* & ctx) {
   int npes;
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   MPI_Comm_size(PETSC_COMM_WORLD, &npes);
+
   ctx = new OuterContext;
   createLocalData(ctx->data);
+
   createRSDtree(ctx->root, rank, npes);
+
   createOuterMat(ctx);
+
   createOuterPC(ctx);
+
   createOuterKsp(ctx);
+
   MatGetVecs(ctx->outerMat, &(ctx->outerSol), &(ctx->outerRhs));
 }
 
@@ -338,13 +348,21 @@ void createLocalData(LocalData* & data) {
   data = new LocalData;
   data->N = 17;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
+
   MPI_Comm_dup(PETSC_COMM_WORLD, &(data->commAll));
+
   createLowAndHighComms(data);
+
   createMG(data);
+
   createLocalMatrices(data);
+
   createSchurDiag(data);
+
   createSchurMat(data);
+
   createInnerKsp(data);
+
 }
 
 void destroyLocalData(LocalData* data) {
@@ -561,9 +579,13 @@ void createSchurMat(LocalData* data) {
 }
 
 void createMG(LocalData* data) {
+  assert(data != NULL);
   assert(data->N >= 16);
   int nlevels = (std::floor(log2(data->N))) - 2;
   assert((8<<(nlevels - 1)) == ((data->N) - 1));
+
+  int rank;
+  MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
   DMMGCreate(PETSC_COMM_SELF, -nlevels, PETSC_NULL, &(data->mgObj));
   DMMGSetOptionsPrefix(data->mgObj, "loc_");
@@ -575,8 +597,6 @@ void createMG(LocalData* data) {
   DADestroy(da);
 
   DMMGSetKSP((data->mgObj), PETSC_NULL, &computeMGmatrix);
-  DMMGSetFromOptions(data->mgObj);
-  DMMGSetUp(data->mgObj);
 }
 
 void createOuterPC(OuterContext* ctx) {
@@ -589,7 +609,10 @@ void createOuterPC(OuterContext* ctx) {
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
   assert(J == B);
 
-  DA da = DMMGGetDA(&dmmg);
+  int rank;
+  MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+
+  DA da = (DA)(dmmg->dm);
 
   int N;
   DAGetInfo(da, PETSC_NULL, &N, PETSC_NULL, PETSC_NULL, 
