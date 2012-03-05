@@ -3,11 +3,9 @@
 #include <cstdlib>
 #include "mpi.h"
 #include "petsc.h"
-#include "petscsys.h"
 #include "schur.h"
 
 double stencil[4][4];
-PetscViewer viewer;
 
 int main(int argc, char** argv) {
   int debugWait = 0;
@@ -23,10 +21,6 @@ int main(int argc, char** argv) {
   int rank;
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-  char outFile[200];
-  sprintf(outFile, "rsdOut_%d.txt", rank);
-  PetscViewerASCIIOpen(PETSC_COMM_SELF, outFile, &viewer);
-
   computeStencil();
 
   OuterContext* ctx;
@@ -40,8 +34,6 @@ int main(int argc, char** argv) {
   KSPSolve(ctx->outerKsp, ctx->outerRhs, ctx->outerSol);
 
   destroyOuterContext(ctx);
-
-  PetscViewerDestroy(viewer);
 
   PetscFinalize();
   return 0;
