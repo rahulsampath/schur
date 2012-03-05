@@ -3,15 +3,15 @@
 %-options_table
 %-options_left
 
--N 17
+-N 65
 
--outer_ksp_max_it 1
-%-outer_ksp_monitor
+-outer_ksp_max_it 50
+-outer_ksp_monitor
 %-outer_ksp_converged_reason
 %-outer_ksp_view
 
--inner_ksp_max_it 1
--inner_ksp_monitor
+-inner_ksp_max_it 3
+%-inner_ksp_monitor
 %-inner_ksp_converged_reason
 %-inner_ksp_view
 
