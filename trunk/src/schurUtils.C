@@ -30,26 +30,26 @@ void createOuterContext(OuterContext* & ctx) {
 }
 
 void destroyOuterContext(OuterContext* ctx) {
-  if(ctx->data) {
-    destroyLocalData(ctx->data);
-  }
-  if(ctx->root) {
-    destroyRSDtree(ctx->root);
-  }
-  if(ctx->outerMat) {
-    MatDestroy(ctx->outerMat);
-  }
-  if(ctx->outerPC) {
-    PCDestroy(ctx->outerPC);
-  }
-  if(ctx->outerKsp) {
-    KSPDestroy(ctx->outerKsp);
-  }
   if(ctx->outerSol) {
     VecDestroy(ctx->outerSol);
   }
   if(ctx->outerRhs) {
     VecDestroy(ctx->outerRhs);
+  }
+  if(ctx->outerKsp) {
+    KSPDestroy(ctx->outerKsp);
+  }
+  if(ctx->outerPC) {
+    PCDestroy(ctx->outerPC);
+  }
+  if(ctx->outerMat) {
+    MatDestroy(ctx->outerMat);
+  }
+  if(ctx->root) {
+    destroyRSDtree(ctx->root);
+  }
+  if(ctx->data) {
+    destroyLocalData(ctx->data);
   }
   delete ctx;
 }
@@ -72,18 +72,23 @@ void createLocalData(LocalData* & data) {
   createSchurMat(data);
 
   createInnerKsp(data);
-
 }
 
 void destroyLocalData(LocalData* data) {
-  if(data->commAll != MPI_COMM_NULL) {
-    MPI_Comm_free(&(data->commAll));
+  if(data->lowSchurKsp) {
+    KSPDestroy(data->lowSchurKsp);
   }
-  if(data->commLow != MPI_COMM_NULL) {
-    MPI_Comm_free(&(data->commLow));
+  if(data->highSchurKsp) {
+    KSPDestroy(data->highSchurKsp);
   }
-  if(data->commHigh != MPI_COMM_NULL) {
-    MPI_Comm_free(&(data->commHigh));
+  if(data->lowSchurMat) {
+    MatDestroy(data->lowSchurMat);
+  }
+  if(data->highSchurMat) {
+    MatDestroy(data->highSchurMat);
+  }
+  if(data->diagS) {
+    VecDestroy(data->diagS);
   }
   if(data->Kssl) {
     MatDestroy(data->Kssl);
@@ -109,23 +114,17 @@ void destroyLocalData(LocalData* data) {
   if(data->Khh) {
     MatDestroy(data->Khh);
   }
-  if(data->lowSchurMat) {
-    MatDestroy(data->lowSchurMat);
-  }
-  if(data->highSchurMat) {
-    MatDestroy(data->highSchurMat);
-  }
-  if(data->diagS) {
-    VecDestroy(data->diagS);
-  }
-  if(data->lowSchurKsp) {
-    KSPDestroy(data->lowSchurKsp);
-  }
-  if(data->highSchurKsp) {
-    KSPDestroy(data->highSchurKsp);
-  }
   if(data->mgObj) {
     DMMGDestroy(data->mgObj);
+  }
+  if(data->commLow != MPI_COMM_NULL) {
+    MPI_Comm_free(&(data->commLow));
+  }
+  if(data->commHigh != MPI_COMM_NULL) {
+    MPI_Comm_free(&(data->commHigh));
+  }
+  if(data->commAll != MPI_COMM_NULL) {
+    MPI_Comm_free(&(data->commAll));
   }
   delete data;
 }
