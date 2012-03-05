@@ -488,6 +488,7 @@ void createOuterKsp(OuterContext* ctx) {
   KSPSetOperators(ctx->outerKsp, ctx->outerMat,
       ctx->outerMat, SAME_NONZERO_PATTERN);
   KSPSetType(ctx->outerKsp, KSPFGMRES);
+  KSPSetTolerances(ctx->outerKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 50);
   KSPSetOptionsPrefix(ctx->outerKsp, "outer_");
   KSPSetPC(ctx->outerKsp, ctx->outerPC);
   KSPSetFromOptions(ctx->outerKsp);
@@ -565,6 +566,7 @@ void createMG(LocalData* data) {
   assert((8<<(nlevels - 1)) == ((data->N) - 1));
 
   DMMGCreate(PETSC_COMM_SELF, -nlevels, PETSC_NULL, &(data->mgObj));
+  DMMGSetOptionsPrefix(data->mgObj, "loc_");
 
   DA da;
   DACreate2d(PETSC_COMM_SELF, DA_NONPERIODIC, DA_STENCIL_BOX, 9, 9,
@@ -916,6 +918,7 @@ void createInnerKsp(LocalData* data) {
       KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
           data->lowSchurMat, SAME_NONZERO_PATTERN);
       KSPSetType(data->lowSchurKsp, KSPFGMRES);
+      KSPSetTolerances(data->lowSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
       PC pc;
       KSPGetPC(data->lowSchurKsp, &pc);
@@ -930,6 +933,7 @@ void createInnerKsp(LocalData* data) {
     KSPSetOperators(data->highSchurKsp, data->highSchurMat,
         data->highSchurMat, SAME_NONZERO_PATTERN);
     KSPSetType(data->highSchurKsp, KSPFGMRES);
+    KSPSetTolerances(data->highSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
     KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
     PC pc;
     KSPGetPC(data->highSchurKsp, &pc);
@@ -944,6 +948,7 @@ void createInnerKsp(LocalData* data) {
       KSPSetOperators(data->highSchurKsp, data->highSchurMat,
           data->highSchurMat, SAME_NONZERO_PATTERN);
       KSPSetType(data->highSchurKsp, KSPFGMRES);
+      KSPSetTolerances(data->highSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
       PC pc;
       KSPGetPC(data->highSchurKsp, &pc);
@@ -959,6 +964,7 @@ void createInnerKsp(LocalData* data) {
       KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
           data->lowSchurMat, SAME_NONZERO_PATTERN);
       KSPSetType(data->lowSchurKsp, KSPFGMRES);
+      KSPSetTolerances(data->lowSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
       PC pc;
       KSPGetPC(data->lowSchurKsp, &pc);
