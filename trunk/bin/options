@@ -1,50 +1,52 @@
 
- %-log_summary
- %-options_table
- -options_left
+%-log_summary
+%-options_table
+-options_left
 
- -N 17
+-N 17
 
- -outer_ksp_monitor
- -outer_ksp_converged_reason
- -outer_ksp_view
+-outer_ksp_max_it 1
+-outer_ksp_monitor
+-outer_ksp_converged_reason
+-outer_ksp_view
 
- -inner_ksp_monitor
- -inner_ksp_converged_reason
- -inner_ksp_view
+-inner_ksp_max_it 1
+-inner_ksp_monitor
+-inner_ksp_converged_reason
+-inner_ksp_view
 
- -loc_ksp_monitor
- -loc_ksp_converged_reason
- -loc_ksp_type cg
- -loc_ksp_max_it 20
- -loc_ksp_rtol 1e-12
- -loc_ksp_atol 1e-12
- -loc_ksp_view
-  
+-loc_ksp_monitor
+-loc_ksp_converged_reason
+-loc_ksp_type cg
+-loc_ksp_max_it 20
+-loc_ksp_rtol 1e-12
+-loc_ksp_atol 1e-12
+-loc_ksp_view
+
 %Options for the Standard MG scheme
- -loc_pc_type mg
- -loc_pc_mg_type multiplicative
- -loc_pc_mg_multiplicative_cycles 1
- -loc_pc_mg_cycle_type v
+-loc_pc_type mg
+-loc_pc_mg_type multiplicative
+-loc_pc_mg_multiplicative_cycles 1
+-loc_pc_mg_cycle_type v
 
- -loc_mg_levels_ksp_type richardson
- -loc_mg_levels_ksp_norm_type no
- -loc_mg_levels_ksp_left_pc
- -loc_mg_levels_ksp_richardson_scale 0.8
+-loc_mg_levels_ksp_type richardson
+-loc_mg_levels_ksp_norm_type no
+-loc_mg_levels_ksp_left_pc
+-loc_mg_levels_ksp_richardson_scale 0.8
 
- -loc_mg_levels_ksp_max_it 4
- -loc_mg_levels_pc_type jacobi
- -loc_mg_levels_ksp_rtol 1e-12
- -loc_mg_levels_ksp_atol 1e-12
- 
- %-loc_mg_levels_ksp_monitor
- %-loc_mg_levels_ksp_view
- 
- -loc_mg_coarse_ksp_type preonly
- -loc_mg_coarse_ksp_max_it 1
- -loc_mg_coarse_pc_type lu
- -loc_mg_coarse_ksp_rtol 1e-12
- -loc_mg_coarse_ksp_atol 1e-12
- 
+-loc_mg_levels_ksp_max_it 4
+-loc_mg_levels_pc_type jacobi
+-loc_mg_levels_ksp_rtol 1e-12
+-loc_mg_levels_ksp_atol 1e-12
 
- 
+%-loc_mg_levels_ksp_monitor
+%-loc_mg_levels_ksp_view
+
+-loc_mg_coarse_ksp_type preonly
+-loc_mg_coarse_ksp_max_it 1
+-loc_mg_coarse_pc_type lu
+-loc_mg_coarse_ksp_rtol 1e-12
+-loc_mg_coarse_ksp_atol 1e-12
+
+
+
