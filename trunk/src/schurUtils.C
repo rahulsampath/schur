@@ -211,6 +211,7 @@ void createLowAndHighComms(LocalData* data) {
 
 void createOuterKsp(OuterContext* ctx) {
   KSPCreate((ctx->data)->commAll, &(ctx->outerKsp));
+  PetscObjectIncrementTabLevel((PetscObject)(ctx->outerKsp), PETSC_NULL, 0);
   KSPSetType(ctx->outerKsp, KSPFGMRES);
   KSPSetTolerances(ctx->outerKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 50);
   KSPSetPC(ctx->outerKsp, ctx->outerPC);
@@ -305,11 +306,13 @@ void createMG(LocalData* data) {
   DADestroy(da);
 
   DMMGSetKSP((data->mgObj), PETSC_NULL, &computeMGmatrix);
+  PetscObjectIncrementTabLevel((PetscObject)(DMMGGetKSP(data->mgObj)), PETSC_NULL, 2);
 }
 
 void createOuterPC(OuterContext* ctx) {
   PCCreate(((ctx->data)->commAll), &(ctx->outerPC));
   PCSetType(ctx->outerPC, PCSHELL);
+  PCShellSetName(ctx->outerPC, "RSD");
   PCShellSetContext(ctx->outerPC, ctx);
   PCShellSetApply(ctx->outerPC, &outerPCapply);
 }
@@ -646,6 +649,7 @@ void createInnerKsp(LocalData* data) {
   if((rank%2) == 0) {
     if(rank < (npes - 1)) {
       KSPCreate(data->commLow, &(data->lowSchurKsp));
+      PetscObjectIncrementTabLevel((PetscObject)(data->lowSchurKsp), PETSC_NULL, 1);
       KSPSetType(data->lowSchurKsp, KSPFGMRES);
       KSPSetTolerances(data->lowSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
@@ -661,6 +665,7 @@ void createInnerKsp(LocalData* data) {
     }
   } else {
     KSPCreate(data->commHigh, &(data->highSchurKsp));
+    PetscObjectIncrementTabLevel((PetscObject)(data->highSchurKsp), PETSC_NULL, 1);
     KSPSetType(data->highSchurKsp, KSPFGMRES);
     KSPSetTolerances(data->highSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
     KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
@@ -676,6 +681,7 @@ void createInnerKsp(LocalData* data) {
   if((rank%2) == 0) {
     if(rank > 0) {
       KSPCreate(data->commHigh, &(data->highSchurKsp));
+      PetscObjectIncrementTabLevel((PetscObject)(data->highSchurKsp), PETSC_NULL, 1);
       KSPSetType(data->highSchurKsp, KSPFGMRES);
       KSPSetTolerances(data->highSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
@@ -692,6 +698,7 @@ void createInnerKsp(LocalData* data) {
   } else {
     if(rank < (npes - 1)) {
       KSPCreate(data->commLow, &(data->lowSchurKsp));
+      PetscObjectIncrementTabLevel((PetscObject)(data->lowSchurKsp), PETSC_NULL, 1);
       KSPSetType(data->lowSchurKsp, KSPFGMRES);
       KSPSetTolerances(data->lowSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
