@@ -3,7 +3,7 @@
 %-options_table
 %-options_left
 
--N 65
+-N 17
 
 -outer_ksp_max_it 50
 -outer_ksp_monitor

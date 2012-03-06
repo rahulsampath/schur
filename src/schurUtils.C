@@ -2,7 +2,6 @@
 #include "mpi.h"
 #include "schur.h"
 #include <cassert>
-#include <iostream>
 #include <cmath>
 #include <vector>
 #include "petscdmmg.h"
@@ -1119,6 +1118,8 @@ void createSchurDiag(LocalData* data) {
   int rank, npes;
   MPI_Comm_rank(data->commAll, &rank);
   MPI_Comm_size(data->commAll, &npes);
+
+  data->diagS = PETSC_NULL;
 
   MPI_Request requestH;
   std::vector<double> dH;
