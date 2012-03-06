@@ -214,11 +214,11 @@ void createOuterKsp(OuterContext* ctx) {
   KSPCreate((ctx->data)->commAll, &(ctx->outerKsp));
   KSPSetType(ctx->outerKsp, KSPFGMRES);
   KSPSetTolerances(ctx->outerKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 50);
-  KSPSetOptionsPrefix(ctx->outerKsp, "outer_");
   KSPSetPC(ctx->outerKsp, ctx->outerPC);
+  KSPSetOptionsPrefix(ctx->outerKsp, "outer_");
+  KSPSetFromOptions(ctx->outerKsp);
   KSPSetOperators(ctx->outerKsp, ctx->outerMat,
       ctx->outerMat, SAME_NONZERO_PATTERN);
-  KSPSetFromOptions(ctx->outerKsp);
   KSPSetUp(ctx->outerKsp);
 }
 
@@ -647,8 +647,6 @@ void createInnerKsp(LocalData* data) {
   if((rank%2) == 0) {
     if(rank < (npes - 1)) {
       KSPCreate(data->commLow, &(data->lowSchurKsp));
-      KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
-          data->lowSchurMat, SAME_NONZERO_PATTERN);
       KSPSetType(data->lowSchurKsp, KSPFGMRES);
       KSPSetTolerances(data->lowSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
@@ -656,14 +654,14 @@ void createInnerKsp(LocalData* data) {
       KSPGetPC(data->lowSchurKsp, &pc);
       PCSetType(pc, PCJACOBI);
       KSPSetFromOptions(data->lowSchurKsp);
+      KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
+          data->lowSchurMat, SAME_NONZERO_PATTERN);
       KSPSetUp(data->lowSchurKsp);
     } else {
       data->lowSchurKsp = PETSC_NULL;
     }
   } else {
     KSPCreate(data->commHigh, &(data->highSchurKsp));
-    KSPSetOperators(data->highSchurKsp, data->highSchurMat,
-        data->highSchurMat, SAME_NONZERO_PATTERN);
     KSPSetType(data->highSchurKsp, KSPFGMRES);
     KSPSetTolerances(data->highSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
     KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
@@ -671,14 +669,14 @@ void createInnerKsp(LocalData* data) {
     KSPGetPC(data->highSchurKsp, &pc);
     PCSetType(pc, PCJACOBI);
     KSPSetFromOptions(data->highSchurKsp);
+    KSPSetOperators(data->highSchurKsp, data->highSchurMat,
+        data->highSchurMat, SAME_NONZERO_PATTERN);
     KSPSetUp(data->highSchurKsp);
   }
 
   if((rank%2) == 0) {
     if(rank > 0) {
       KSPCreate(data->commHigh, &(data->highSchurKsp));
-      KSPSetOperators(data->highSchurKsp, data->highSchurMat,
-          data->highSchurMat, SAME_NONZERO_PATTERN);
       KSPSetType(data->highSchurKsp, KSPFGMRES);
       KSPSetTolerances(data->highSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
@@ -686,6 +684,8 @@ void createInnerKsp(LocalData* data) {
       KSPGetPC(data->highSchurKsp, &pc);
       PCSetType(pc, PCJACOBI);
       KSPSetFromOptions(data->highSchurKsp);
+      KSPSetOperators(data->highSchurKsp, data->highSchurMat,
+          data->highSchurMat, SAME_NONZERO_PATTERN);
       KSPSetUp(data->highSchurKsp);
     } else {
       data->highSchurKsp = PETSC_NULL;
@@ -693,8 +693,6 @@ void createInnerKsp(LocalData* data) {
   } else {
     if(rank < (npes - 1)) {
       KSPCreate(data->commLow, &(data->lowSchurKsp));
-      KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
-          data->lowSchurMat, SAME_NONZERO_PATTERN);
       KSPSetType(data->lowSchurKsp, KSPFGMRES);
       KSPSetTolerances(data->lowSchurKsp, 1.0e-12, 1.0e-12, PETSC_DEFAULT, 2);
       KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
@@ -702,6 +700,8 @@ void createInnerKsp(LocalData* data) {
       KSPGetPC(data->lowSchurKsp, &pc);
       PCSetType(pc, PCJACOBI);
       KSPSetFromOptions(data->lowSchurKsp);
+      KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
+          data->lowSchurMat, SAME_NONZERO_PATTERN);
       KSPSetUp(data->lowSchurKsp);
     } else {
       data->lowSchurKsp = PETSC_NULL;
