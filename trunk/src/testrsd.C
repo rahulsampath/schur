@@ -16,15 +16,20 @@ int main(int argc, char** argv) {
 
   while (debugWait);
 
-  PetscInitialize(&argc, &argv, "options", PETSC_NULL);
+  MPI_Init(&argc, &argv);
 
   int rank, npes;
-  MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-  MPI_Comm_size(PETSC_COMM_WORLD, &npes);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &npes);
 
+  MPI_Barrier(MPI_COMM_WORLD);
   if(!rank) {
     std::cout<<"Npes = "<<npes<<std::endl;
   } 
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  PETSC_COMM_WORLD = MPI_COMM_WORLD;
+  PetscInitialize(&argc, &argv, "options", PETSC_NULL);
 
   computeStencil();
 
@@ -40,13 +45,16 @@ int main(int argc, char** argv) {
 
   destroyOuterContext(ctx);
 
-  MPI_Barrier(PETSC_COMM_WORLD);
+  PetscFinalize();
+
+  MPI_Barrier(MPI_COMM_WORLD);
   if(!rank) {
     std::cout<<"Done"<<std::endl<<std::endl;
   }
-  MPI_Barrier(PETSC_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
 
-  PetscFinalize();
+  MPI_Finalize();
+
   return 0;
 }
 
