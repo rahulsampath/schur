@@ -43,13 +43,25 @@ int main(int argc, char** argv) {
   VecZeroEntries(ctx->outerSol);
   KSPSolve(ctx->outerKsp, ctx->outerRhs, ctx->outerSol);
 
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(!rank) {
+    std::cout<<"Done Solve"<<std::endl<<std::endl;
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+
   destroyOuterContext(ctx);
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(!rank) {
+    std::cout<<"Destroyed Outer Context"<<std::endl<<std::endl;
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
 
   PetscFinalize();
 
   MPI_Barrier(MPI_COMM_WORLD);
   if(!rank) {
-    std::cout<<"Done"<<std::endl<<std::endl;
+    std::cout<<"Finalized Petsc"<<std::endl<<std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
 
