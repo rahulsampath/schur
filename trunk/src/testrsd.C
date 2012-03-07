@@ -18,8 +18,13 @@ int main(int argc, char** argv) {
 
   PetscInitialize(&argc, &argv, "options", PETSC_NULL);
 
-  int rank;
+  int rank, npes;
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+  MPI_Comm_size(PETSC_COMM_WORLD, &npes);
+
+  if(!rank) {
+    std::cout<<"Npes = "<<npes<<std::endl;
+  } 
 
   computeStencil();
 

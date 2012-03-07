@@ -1,5 +1,6 @@
 
 #include "mpi.h"
+#include <iostream>
 #include "schur.h"
 #include <cassert>
 #include <cmath>
@@ -57,6 +58,12 @@ void createLocalData(LocalData* & data) {
   data = new LocalData;
   data->N = 17;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
+
+  int rank;
+  MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+  if(!rank) {
+    std::cout<<"N = "<<(data->N)<<std::endl;
+  }
 
   MPI_Comm_dup(PETSC_COMM_WORLD, &(data->commAll));
 
