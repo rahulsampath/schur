@@ -3,14 +3,14 @@
 %-options_table
 %-options_left
 
--N 17
+%-N 17
 
--outer_ksp_max_it 50
+-outer_ksp_max_it 100
 -outer_ksp_monitor
 %-outer_ksp_converged_reason
 %-outer_ksp_view
 
--inner_ksp_max_it 2
+%-inner_ksp_max_it 2
 %-inner_ksp_monitor
 %-inner_pc_type none
 %-inner_ksp_converged_reason
