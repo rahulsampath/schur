@@ -176,6 +176,7 @@ void createLowAndHighComms(LocalData* data) {
       MPI_Group_free(&lowGroup);
     } else {
       MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commLow));
+      assert((data->commLow) == MPI_COMM_NULL);
     }
   } else {
     int highRanks[2];
@@ -198,6 +199,7 @@ void createLowAndHighComms(LocalData* data) {
       MPI_Group_free(&highGroup);
     } else {
       MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commHigh));
+      assert((data->commHigh) == MPI_COMM_NULL);
     }
   } else {
     if(rank < (npes - 1)) {
@@ -210,6 +212,7 @@ void createLowAndHighComms(LocalData* data) {
       MPI_Group_free(&lowGroup);
     } else {
       MPI_Comm_create(data->commAll, MPI_GROUP_EMPTY, &(data->commLow));
+      assert((data->commLow) == MPI_COMM_NULL);
     }
   }
 
