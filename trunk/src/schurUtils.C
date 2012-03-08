@@ -16,6 +16,15 @@ void createOuterContext(OuterContext* & ctx) {
   MPI_Comm_size(PETSC_COMM_WORLD, &npes);
 
   ctx = new OuterContext;
+
+  ctx->data = NULL;
+  ctx->root = NULL;
+  ctx->outerMat = PETSC_NULL;
+  ctx->outerKsp = PETSC_NULL;
+  ctx->outerPC = PETSC_NULL;
+  ctx->outerSol = PETSC_NULL;
+  ctx->outerRhs = PETSC_NULL;
+
   createLocalData(ctx->data);
 
   createRSDtree(ctx->root, rank, npes);
@@ -56,6 +65,25 @@ void destroyOuterContext(OuterContext* ctx) {
 
 void createLocalData(LocalData* & data) {
   data = new LocalData;
+
+  data->commAll = MPI_COMM_NULL;
+  data->commLow = MPI_COMM_NULL;
+  data->commHigh = MPI_COMM_NULL;
+  data->Kssl = PETSC_NULL;
+  data->Kssh = PETSC_NULL;
+  data->Ksl = PETSC_NULL;
+  data->Ksh = PETSC_NULL;
+  data->Kls = PETSC_NULL;
+  data->Khs = PETSC_NULL;
+  data->Kll = PETSC_NULL;
+  data->Khh = PETSC_NULL;
+  data->lowSchurMat = PETSC_NULL;
+  data->highSchurMat = PETSC_NULL;
+  data->lowSchurKsp = PETSC_NULL;
+  data->highSchurKsp = PETSC_NULL;
+  data->diagS = PETSC_NULL; 
+  data->mgObj = PETSC_NULL;
+
   data->N = 17;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
 
@@ -1135,8 +1163,6 @@ void createSchurDiag(LocalData* data) {
   int rank, npes;
   MPI_Comm_rank(data->commAll, &rank);
   MPI_Comm_size(data->commAll, &npes);
-
-  data->diagS = PETSC_NULL;
 
   MPI_Request requestH;
   std::vector<double> dH;
