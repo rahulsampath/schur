@@ -158,7 +158,7 @@ void destroyLocalData(LocalData* data) {
     MPI_Comm_free(&(data->commHigh));
   }
   if(data->commAll != MPI_COMM_NULL) {
-    MPI_Comm_free(&(data->commAll));
+    //MPI_Comm_free(&(data->commAll));
   }
   delete data;
 }
