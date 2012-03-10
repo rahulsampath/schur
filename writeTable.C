@@ -5,11 +5,11 @@
 int main() {
   FILE*fp = fopen("table.tex", "w");
 
-  int N[] = {17, 65, 257, 513};
+  int N[] = {17, 65, 257};
   int P[] = {4, 64, 256, 512};
   int G[] = {1, 2, 4, 8};
 
-  for(int ni = 0; ni < 4; ++ni) {
+  for(int ni = 0; ni < 3; ++ni) {
     fprintf(fp, " %d &", (N[ni] - 1));
     for(int pi = 0; pi < 4; ++pi) {
       for(int gi = 0; gi < 4; ++gi) {
