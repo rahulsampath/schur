@@ -17,7 +17,6 @@
 %-inner_ksp_view
 
 -loc_ksp_type cg
-%-loc_ksp_max_it 20
 -loc_ksp_max_it 1
 -loc_ksp_rtol 1e-12
 -loc_ksp_atol 1e-12
