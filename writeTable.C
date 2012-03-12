@@ -16,7 +16,7 @@ int main() {
   const int Glen = 4;
 
   for(int ni = 0; ni < Nlen; ++ni) {
-    fprintf(fp, " %d &", (N[ni] - 1));
+    fprintf(fp, " %d &", N[ni]);
     for(int pi = 0; pi < Plen; ++pi) {
       for(int gi = 0; gi < Glen; ++gi) {
         char fname[256];
