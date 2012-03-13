@@ -31,6 +31,12 @@ int main(int argc, char** argv) {
   PETSC_COMM_WORLD = MPI_COMM_WORLD;
   PetscInitialize(&argc, &argv, "options", PETSC_NULL);
 
+  int G = 1;
+  PetscOptionsGetInt(PETSC_NULL, "-inner_ksp_max_it", &G, PETSC_NULL);
+  if(!rank) {
+    std::cout<<"G = "<<G<<std::endl;
+  }
+
   computeStencil();
 
   OuterContext* ctx;
