@@ -16,7 +16,8 @@ struct RSDnode {
 };
 
 struct LocalData {
-  int N; 
+  int N;
+  int dofsPerNode;
   MPI_Comm commAll, commLow, commHigh;
   Mat Kssl, Kssh;
   Mat Ksl, Ksh;
