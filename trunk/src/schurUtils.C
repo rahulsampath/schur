@@ -84,6 +84,7 @@ void createLocalData(LocalData* & data) {
   data->diagS = PETSC_NULL; 
   data->mgObj = PETSC_NULL;
 
+  data->dofsPerNode = 1;
   data->N = 17;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
 
