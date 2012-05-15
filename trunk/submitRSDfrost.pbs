@@ -3,6 +3,8 @@
 #PBS -A NFI006
 #PBS -N RSD
 #PBS -j oe
+#PBS -m abe
+#PBS -M rahul.sampath@gmail.com
 #PBS -l walltime=0:05:00,nodes=2:ppn=16
 #PBS -q batch
 #
