@@ -81,7 +81,6 @@ void createLocalData(LocalData* & data) {
   data->highSchurMat = PETSC_NULL;
   data->lowSchurKsp = PETSC_NULL;
   data->highSchurKsp = PETSC_NULL;
-  data->diagS = PETSC_NULL; 
   data->mgObj = PETSC_NULL;
 
   data->dofsPerNode = 1;
@@ -102,8 +101,6 @@ void createLocalData(LocalData* & data) {
 
   createLocalMatrices(data);
 
-  createSchurDiag(data);
-
   createSchurMat(data);
 
   createInnerKsp(data);
@@ -121,9 +118,6 @@ void destroyLocalData(LocalData* data) {
   }
   if(data->highSchurMat) {
     MatDestroy(data->highSchurMat);
-  }
-  if(data->diagS) {
-    VecDestroy(data->diagS);
   }
   if(data->Kssl) {
     MatDestroy(data->Kssl);
@@ -314,12 +308,10 @@ void createSchurMat(LocalData* data) {
 
   if(lowMat) {
     MatShellSetOperation(lowMat, MATOP_MULT, (void(*)(void))(&lowSchurMatMult));
-    MatShellSetOperation(lowMat, MATOP_GET_DIAGONAL, (void(*)(void))(&lowSchurMatDiag));
   }
 
   if(highMat) {
     MatShellSetOperation(highMat, MATOP_MULT, (void(*)(void))(&highSchurMatMult));
-    MatShellSetOperation(highMat, MATOP_GET_DIAGONAL, (void(*)(void))(&highSchurMatDiag));
   }
 
   data->lowSchurMat = lowMat;
@@ -548,31 +540,6 @@ PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
   return 0;
 }
 
-PetscErrorCode lowSchurMatDiag(Mat mat, Vec out) {
-  LocalData* data;
-  MatShellGetContext(mat, (void**)(&data));
-
-  PetscScalar* outArr;
-  PetscScalar* inArr;
-
-  VecGetArray(out, &outArr);
-  VecGetArray(data->diagS, &inArr);
-
-  for(int i = 0; i < (data->N); ++i) {
-    outArr[i] = inArr[i];
-  }//end i
-
-  VecRestoreArray(out, &outArr);
-  VecRestoreArray(data->diagS, &inArr);
-
-  return 0;
-}
-
-PetscErrorCode highSchurMatDiag(Mat mat, Vec out) {
-  //Nothing to be done here.
-  return 0;
-}
-
 PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
   LocalData* data;
   MatShellGetContext(mat, (void**)(&data));
@@ -694,7 +661,7 @@ void createInnerKsp(LocalData* data) {
       KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
       PC pc;
       KSPGetPC(data->lowSchurKsp, &pc);
-      PCSetType(pc, PCJACOBI);
+      PCSetType(pc, PCNONE);
       KSPSetFromOptions(data->lowSchurKsp);
       KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
           data->lowSchurMat, SAME_NONZERO_PATTERN);
@@ -710,7 +677,7 @@ void createInnerKsp(LocalData* data) {
     KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
     PC pc;
     KSPGetPC(data->highSchurKsp, &pc);
-    PCSetType(pc, PCJACOBI);
+    PCSetType(pc, PCNONE);
     KSPSetFromOptions(data->highSchurKsp);
     KSPSetOperators(data->highSchurKsp, data->highSchurMat,
         data->highSchurMat, SAME_NONZERO_PATTERN);
@@ -726,7 +693,7 @@ void createInnerKsp(LocalData* data) {
       KSPSetOptionsPrefix(data->highSchurKsp, "inner_");
       PC pc;
       KSPGetPC(data->highSchurKsp, &pc);
-      PCSetType(pc, PCJACOBI);
+      PCSetType(pc, PCNONE);
       KSPSetFromOptions(data->highSchurKsp);
       KSPSetOperators(data->highSchurKsp, data->highSchurMat,
           data->highSchurMat, SAME_NONZERO_PATTERN);
@@ -743,7 +710,7 @@ void createInnerKsp(LocalData* data) {
       KSPSetOptionsPrefix(data->lowSchurKsp, "inner_");
       PC pc;
       KSPGetPC(data->lowSchurKsp, &pc);
-      PCSetType(pc, PCJACOBI);
+      PCSetType(pc, PCNONE);
       KSPSetFromOptions(data->lowSchurKsp);
       KSPSetOperators(data->lowSchurKsp, data->lowSchurMat,
           data->lowSchurMat, SAME_NONZERO_PATTERN);
@@ -1158,113 +1125,6 @@ void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol) {
 
   VecDestroy(rhsKsp);
   VecDestroy(solKsp);
-}
-
-void createSchurDiag(LocalData* data) {
-  int rank, npes;
-  MPI_Comm_rank(data->commAll, &rank);
-  MPI_Comm_size(data->commAll, &npes);
-
-  MPI_Request requestH;
-  std::vector<double> dH;
-  if(rank > 0) {
-    Vec diagH, diagSh;
-    std::vector<double> dHstar;
-    int Ssize, Hsize;
-    PetscScalar *arr;
-
-    MatGetVecs(data->Khh, PETSC_NULL, &diagH);
-    MatGetVecs(data->Kssh, PETSC_NULL, &diagSh);
-
-    MatGetDiagonal(data->Khh, diagH);
-    MatGetDiagonal(data->Kssh, diagSh);
-
-    VecGetSize(diagSh, &Ssize);
-    VecGetSize(diagH, &Hsize);
-
-    dHstar.resize(Ssize);
-    VecGetArray(diagH, &arr);
-    for(int i = 0; i < Ssize; i++) {
-      dHstar[i] = 0.0;
-      for(int k = 0; k < Hsize; k++) {
-        PetscScalar val1, val2;
-        MatGetValues(data->Ksh, 1, &i, 1, &k, &val1);
-        MatGetValues(data->Khs, 1, &k, 1, &i, &val2);
-        dHstar[i] += (val1*val2/(arr[k]));
-      }//end for k
-    }//end for i
-    VecRestoreArray(diagH, &arr);
-
-    dH.resize(Ssize);
-    VecGetArray(diagSh, &arr);
-    for(int i = 0; i < Ssize; i++) {
-      dH[i] = arr[i] - dHstar[i];
-    }//end for i
-    VecRestoreArray(diagSh, &arr);
-
-    MPI_Isend((&(dH[0])), Ssize, MPI_DOUBLE, 0, 2, data->commHigh, &requestH);
-
-    VecDestroy(diagH);
-    VecDestroy(diagSh);
-  }
-
-  if(rank < (npes - 1)) {
-    Vec diagL, diagSl;
-    std::vector<double> dLstar, dL;
-    int Ssize, Lsize;
-    PetscScalar *arr;
-
-    MatGetVecs(data->Kssl, PETSC_NULL, &diagSl);
-    MatGetDiagonal(data->Kssl, diagSl);
-    VecGetSize(diagSl, &Ssize);
-
-    std::vector<double> dHcopy(Ssize);
-
-    MPI_Request requestL;
-    MPI_Irecv((&(dHcopy[0])), Ssize, MPI_DOUBLE, 1, 2, data->commLow, &requestL);
-
-    MatGetVecs(data->Kll, PETSC_NULL, &diagL);
-    MatGetDiagonal(data->Kll, diagL);
-    VecGetSize(diagL, &Lsize);
-
-    dLstar.resize(Ssize);
-    VecGetArray(diagL, &arr);
-    for(int i = 0; i < Ssize; i++) {
-      dLstar[i] = 0.0;
-      for(int k = 0; k < Lsize; k++) {
-        PetscScalar val1, val2;
-        MatGetValues(data->Ksl, 1, &i, 1, &k, &val1);
-        MatGetValues(data->Kls, 1, &k, 1, &i, &val2);
-        dLstar[i] += (val1*val2/(arr[k]));
-      }//end for k
-    }//end for i
-    VecRestoreArray(diagL, &arr);
-
-    dL.resize(Ssize);
-    VecGetArray(diagSl, &arr);
-    for(int i = 0; i < Ssize; i++) {
-      dL[i] = arr[i] - dLstar[i];
-    }//end for i
-    VecRestoreArray(diagSl, &arr);
-
-    VecDestroy(diagL);
-    VecDestroy(diagSl);
-
-    MPI_Status status;
-    MPI_Wait(&requestL, &status);
-
-    VecCreateSeq(PETSC_COMM_SELF, Ssize, &(data->diagS));
-    VecGetArray(data->diagS, &arr);
-    for(int i = 0; i < Ssize; i++) {
-      arr[i] = dL[i] + dHcopy[i];
-    }//end for i
-    VecRestoreArray(data->diagS, &arr);
-  }
-
-  if(rank > 0) {
-    MPI_Status status;
-    MPI_Wait(&requestH, &status);
-  }
 }
 
 double dPhidPsi(int i, double eta) {

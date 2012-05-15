@@ -25,7 +25,6 @@ struct LocalData {
   Mat Kll, Khh;
   Mat lowSchurMat, highSchurMat;
   KSP lowSchurKsp, highSchurKsp;
-  Vec diagS; 
   DMMG* mgObj;
 };
 
@@ -77,10 +76,6 @@ PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out);
 
 PetscErrorCode highSchurMatMult(Mat mat, Vec in, Vec out);
 
-PetscErrorCode lowSchurMatDiag(Mat mat, Vec out);
-
-PetscErrorCode highSchurMatDiag(Mat mat, Vec out);
-
 void createMG(LocalData* data);
 
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B);
@@ -98,8 +93,6 @@ void createRSDtree(RSDnode *& root, int rank, int npes);
 void destroyRSDtree(RSDnode *root);
 
 void createLowAndHighComms(LocalData* data);
-
-void createSchurDiag(LocalData* data);
 
 //Uses S ordering
 void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout);
