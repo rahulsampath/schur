@@ -11,8 +11,8 @@
 %-outer_ksp_view
 
 %-inner_ksp_max_it 2
-%-inner_ksp_monitor
 %-inner_pc_type none
+%-inner_ksp_monitor
 %-inner_ksp_converged_reason
 %-inner_ksp_view
 

@@ -1,7 +1,7 @@
 
+#include "mpi.h"
 #include <iostream>
 #include <cstdlib>
-#include "mpi.h"
 #include "petsc.h"
 #include "schur.h"
 
