@@ -86,14 +86,16 @@ void createLocalData(LocalData* & data) {
   data->dofsPerNode = 1;
   data->N = 17;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
+  PetscOptionsGetInt(PETSC_NULL, "-D", &(data->dofsPerNode), PETSC_NULL);
 
   int rank;
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   if(!rank) {
     std::cout<<"N = "<<(data->N)<<std::endl;
+    std::cout<<"D = "<<(data->dofsPerNode)<<std::endl;
   }
 
-  MPI_Comm_dup(PETSC_COMM_WORLD, &(data->commAll));
+  data->commAll = PETSC_COMM_WORLD;
 
   createLowAndHighComms(data);
 
@@ -151,9 +153,6 @@ void destroyLocalData(LocalData* data) {
   }
   if(data->commHigh != MPI_COMM_NULL) {
     MPI_Comm_free(&(data->commHigh));
-  }
-  if(data->commAll != MPI_COMM_NULL) {
-    //MPI_Comm_free(&(data->commAll));
   }
   delete data;
 }
@@ -324,9 +323,6 @@ void createMG(LocalData* data) {
   int nlevels = (std::floor(log2(data->N))) - 2;
   assert((8<<(nlevels - 1)) == ((data->N) - 1));
 
-  int rank;
-  MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-
   DMMGCreate(PETSC_COMM_SELF, -nlevels, PETSC_NULL, &(data->mgObj));
   DMMGSetOptionsPrefix(data->mgObj, "loc_");
 
@@ -350,9 +346,6 @@ void createOuterPC(OuterContext* ctx) {
 
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
   assert(J == B);
-
-  int rank;
-  MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
   DA da = (DA)(dmmg->dm);
 
