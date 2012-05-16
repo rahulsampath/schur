@@ -7,6 +7,9 @@
 
 double stencil[4][4];
 
+PetscLogEvent outerKspEvent;
+PetscCookie rsdCookie;
+
 int main(int argc, char** argv) {
   int debugWait = 0;
 
@@ -31,6 +34,9 @@ int main(int argc, char** argv) {
   PETSC_COMM_WORLD = MPI_COMM_WORLD;
   PetscInitialize(&argc, &argv, "options", PETSC_NULL);
 
+  PetscCookieRegister("RSD", &rsdCookie);
+  PetscLogEventRegister("OuterKsp", rsdCookie, &outerKspEvent);
+
   int G = 1;
   PetscOptionsGetInt(PETSC_NULL, "-inner_ksp_max_it", &G, PETSC_NULL);
   if(!rank) {
@@ -47,7 +53,12 @@ int main(int argc, char** argv) {
   MatMult(ctx->outerMat, ctx->outerSol, ctx->outerRhs);
 
   VecZeroEntries(ctx->outerSol);
+
+  PetscLogEventBegin(outerKspEvent, 0, 0, 0, 0);
+
   KSPSolve(ctx->outerKsp, ctx->outerRhs, ctx->outerSol);
+
+  PetscLogEventEnd(outerKspEvent, 0, 0, 0, 0);
 
   MPI_Barrier(MPI_COMM_WORLD);
   if(!rank) {
