@@ -13,14 +13,10 @@ cd ${PBS_O_WORKDIR}/bin
 
 date
 
-export MyN=33
-export MyP=32
-export MyG=4
-
 export OMP_NUM_THREADS=1
 export MPI_GROUP_MAX=32000
 export MPI_COMM_MAX=32000
 
-mpiexec_mpt -np ${MyP} ./testrsd 0 -N ${MyN} -inner_ksp_max_it ${MyG} | tee rsdN${MyN}P${MyP}G${MyG}.txt
+mpiexec_mpt -n 32 ./testrsd | tee rsd.txt
 
 
