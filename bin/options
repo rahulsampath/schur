@@ -1,17 +1,17 @@
 
-%-log_summary
+-log_summary
 %-options_table
 %-options_left
 
-%-N 17
-%-D 1
+-N 17
+-D 1
 
 -outer_ksp_max_it 300
 -outer_ksp_monitor
 -outer_ksp_converged_reason
 %-outer_ksp_view
 
-%-inner_ksp_max_it 2
+-inner_ksp_max_it 4
 %-inner_pc_type none
 %-inner_ksp_monitor
 %-inner_ksp_converged_reason
