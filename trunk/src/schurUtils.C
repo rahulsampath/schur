@@ -722,14 +722,14 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
 
       MatGetVecs(data->Ksl, &fL, &fStarHigh);
 
-      PetscScalar* arr;
-      VecGetArray(fStarHigh, &arr);
+      PetscScalar* recvArr7;
+      VecGetArray(fStarHigh, &recvArr7);
 
       PetscInt Ssize;
       VecGetSize(fStarHigh, &Ssize);
 
       MPI_Request recvRequest7;
-      MPI_Irecv(arr, Ssize, MPI_DOUBLE, 1, 7, data->commLow, &recvRequest7);
+      MPI_Irecv(recvArr7, Ssize, MPI_DOUBLE, 1, 7, data->commLow, &recvRequest7);
 
       Vec fStar, gS, uS, gL;
       VecDuplicate(fStarHigh, &fStar);
@@ -751,16 +751,17 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MPI_Status recvStatus7;
       MPI_Wait(&recvRequest7, &recvStatus7);
 
-      VecRestoreArray(fStarHigh, &arr);
+      VecRestoreArray(fStarHigh, &recvArr7);
 
       VecAXPBYPCZ(gS, -1.0, -1.0, 1.0, fStar, fStarHigh);
 
       schurSolve(data, true, gS, uS);
 
-      VecGetArray(uS, &arr);
+      PetscScalar* sendArr8;
+      VecGetArray(uS, &sendArr8);
 
       MPI_Request sendRequest8;
-      MPI_Isend(arr, Ssize, MPI_DOUBLE, 1, 8, data->commLow, &sendRequest8);
+      MPI_Isend(sendArr8, Ssize, MPI_DOUBLE, 1, 8, data->commLow, &sendRequest8);
 
       MatMult(data->Kls, uS, gL);
 
@@ -790,7 +791,7 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MPI_Status sendStatus8;
       MPI_Wait(&sendRequest8, &sendStatus8);
 
-      VecRestoreArray(uS, &arr);
+      VecRestoreArray(uS, &sendArr8);
 
       VecDestroy(uS);
     } else if(root->rankForCurrLevel == ((root->npesForCurrLevel)/2)) {
@@ -809,11 +810,11 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       PetscInt Ssize;
       VecGetSize(fStar, &Ssize);
 
-      PetscScalar* arr;
-      VecGetArray(fStar, &arr);
+      PetscScalar* sendArr7;
+      VecGetArray(fStar, &sendArr7);
 
       MPI_Request sendRequest7;
-      MPI_Isend(arr, Ssize, MPI_DOUBLE, 0, 7, data->commHigh, &sendRequest7);
+      MPI_Isend(sendArr7, Ssize, MPI_DOUBLE, 0, 7, data->commHigh, &sendRequest7);
 
       Vec uS, gH;
       VecDuplicate(fStar, &uS);
@@ -824,12 +825,13 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MPI_Status sendStatus7;
       MPI_Wait(&sendRequest7, &sendStatus7);
 
-      VecRestoreArray(fStar, &arr);
+      VecRestoreArray(fStar, &sendArr7);
 
-      VecGetArray(uS, &arr);
+      PetscScalar* recvArr8;
+      VecGetArray(uS, &recvArr8);
 
       MPI_Request recvRequest8;
-      MPI_Irecv(arr, Ssize, MPI_DOUBLE, 0, 8, data->commHigh, &recvRequest8);
+      MPI_Irecv(recvArr8, Ssize, MPI_DOUBLE, 0, 8, data->commHigh, &recvRequest8);
 
       Vec gRhs = DMMGGetRHS(data->mgObj);
       Vec gSol = DMMGGetx(data->mgObj);
@@ -840,7 +842,7 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MPI_Status recvStatus8;
       MPI_Wait(&recvRequest8, &recvStatus8);
 
-      VecRestoreArray(uS, &arr);
+      VecRestoreArray(uS, &recvArr8);
 
       MatMult(data->Khs, uS, gH);
 
