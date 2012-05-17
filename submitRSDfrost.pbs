@@ -5,8 +5,10 @@
 #PBS -j oe
 #PBS -m abe
 #PBS -M rahul.sampath@gmail.com
-#PBS -l walltime=0:05:00,nodes=1:ppn=16
+#PBS -l walltime=0:05:00
+#PBS -l nodes=1:ppn=16
 #PBS -q batch
+#PBS -V
 #
 
 cd ${PBS_O_WORKDIR}/bin
