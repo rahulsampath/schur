@@ -48,7 +48,18 @@ int main(int argc, char** argv) {
   OuterContext* ctx;
   createOuterContext(ctx);
 
-  VecSetRandom(ctx->outerSol, PETSC_NULL);
+  const unsigned int seed = (0x3456782  + (54763*rank));
+
+  PetscRandom rndCtx;
+  PetscRandomCreate(PETSC_COMM_WORLD, &rndCtx);
+  PetscRandomSetType(rndCtx, PETSCRAND48);
+  PetscRandomSetSeed(rndCtx, seed);
+  PetscRandomSeed(rndCtx);
+
+  VecSetRandom(ctx->outerSol, rndCtx);
+
+  PetscRandomDestroy(rndCtx);
+
   zeroBoundary(ctx->data, ctx->outerSol);
   MatMult(ctx->outerMat, ctx->outerSol, ctx->outerRhs);
 
