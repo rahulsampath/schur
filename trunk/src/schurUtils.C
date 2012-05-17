@@ -887,15 +887,16 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       PetscInt Ssize;
       VecGetSize(uS, &Ssize);
 
-      PetscScalar* arr;
-      VecGetArray(uS, &arr);
+      PetscScalar* sendArr5;
+      VecGetArray(uS, &sendArr5);
 
       MPI_Request sendRequest5;
-      MPI_Isend(arr, Ssize, MPI_DOUBLE, 1, 5, data->commLow, &sendRequest5);
+      MPI_Isend(sendArr5, Ssize, MPI_DOUBLE, 1, 5, data->commLow, &sendRequest5);
+
       MPI_Status sendStatus5;
       MPI_Wait(&sendRequest5, &sendStatus5);
 
-      VecRestoreArray(uS, &arr);
+      VecRestoreArray(uS, &sendArr5);
 
       Vec uL, bS, cL, yS;
       MatGetVecs(data->Ksl, &uL, &bS);
@@ -924,14 +925,17 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
 
       Vec uSout;
       VecDuplicate(uS, &uSout);
-      VecGetArray(uSout, &arr);
+
+      PetscScalar* recvArr6;
+      VecGetArray(uSout, &recvArr6);
 
       MPI_Request recvRequest6;
-      MPI_Irecv(arr, Ssize, MPI_DOUBLE, 1, 6, data->commLow, &recvRequest6);
+      MPI_Irecv(recvArr6, Ssize, MPI_DOUBLE, 1, 6, data->commLow, &recvRequest6);
+
       MPI_Status recvStatus6;
       MPI_Wait(&recvRequest6, &recvStatus6);
 
-      VecRestoreArray(uSout, &arr);
+      VecRestoreArray(uSout, &recvArr6);
 
       VecAXPY(uSout, 1.0, yS);
 
@@ -952,15 +956,16 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       PetscInt Ssize;
       VecGetSize(uS, &Ssize);
 
-      PetscScalar *arr;
-      VecGetArray(uS, &arr);
+      PetscScalar *recvArr5;
+      VecGetArray(uS, &recvArr5);
 
       MPI_Request recvRequest5;
-      MPI_Irecv(arr, Ssize, MPI_DOUBLE, 0, 5, data->commHigh, &recvRequest5);
+      MPI_Irecv(recvArr5, Ssize, MPI_DOUBLE, 0, 5, data->commHigh, &recvRequest5);
+
       MPI_Status recvStatus5;
       MPI_Wait(&recvRequest5, &recvStatus5);
 
-      VecRestoreArray(uS, &arr);
+      VecRestoreArray(uS, &recvArr5);
 
       Vec uH, bS, cH, yS;
       MatGetVecs(data->Ksh, &uH, &bS);
@@ -987,14 +992,16 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
 
       VecAXPY(uOut, 1.0, cO);
 
-      VecGetArray(yS, &arr);
+      PetscScalar *sendArr6;
+      VecGetArray(yS, &sendArr6);
 
       MPI_Request sendRequest6;
-      MPI_Isend(arr, Ssize, MPI_DOUBLE, 0, 6, data->commHigh, &sendRequest6);
+      MPI_Isend(sendArr6, Ssize, MPI_DOUBLE, 0, 6, data->commHigh, &sendRequest6);
+
       MPI_Status sendStatus6;
       MPI_Wait(&sendRequest6, &sendStatus6);
 
-      VecRestoreArray(yS, &arr);
+      VecRestoreArray(yS, &sendArr6);
 
       VecDestroy(cO);
       VecDestroy(cH);
@@ -1029,15 +1036,16 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     PetscInt Ssize;
     VecGetSize(uSin, &Ssize);
 
-    PetscScalar* arr;
-    VecGetArray(uSin, &arr);
+    PetscScalar* sendArr3;
+    VecGetArray(uSin, &sendArr3);
 
     MPI_Request sendRequest3;
-    MPI_Isend(arr, Ssize, MPI_DOUBLE, 1, 3, data->commLow, &sendRequest3);
+    MPI_Isend(sendArr3, Ssize, MPI_DOUBLE, 1, 3, data->commLow, &sendRequest3);
+
     MPI_Status sendStatus3;
     MPI_Wait(&sendRequest3, &sendStatus3);
 
-    VecRestoreArray(uSin, &arr);
+    VecRestoreArray(uSin, &sendArr3);
 
     Vec uL;
     MatGetVecs(data->Kssl, PETSC_NULL, &uL);
@@ -1069,14 +1077,16 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     VecWAXPY(uStarL, -1.0, wS, uL);
 
-    VecGetArray(uSout, &arr);
+    PetscScalar* recvArr4;
+    VecGetArray(uSout, &recvArr4);
 
     MPI_Request recvRequest4;
-    MPI_Irecv(arr, Ssize, MPI_DOUBLE, 1, 4, data->commLow, &recvRequest4);
+    MPI_Irecv(recvArr4, Ssize, MPI_DOUBLE, 1, 4, data->commLow, &recvRequest4);
+
     MPI_Status recvStatus4;
     MPI_Wait(&recvRequest4, &recvStatus4);
 
-    VecRestoreArray(uSout, &arr);
+    VecRestoreArray(uSout, &recvArr4);
 
     VecAXPY(uSout, 1.0, uStarL);
 
@@ -1092,15 +1102,16 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     PetscInt Ssize;
     VecGetSize(uSinCopy, &Ssize);
 
-    PetscScalar* arr;
-    VecGetArray(uSinCopy, &arr);
+    PetscScalar* recvArr3;
+    VecGetArray(uSinCopy, &recvArr3);
 
     MPI_Request recvRequest3;
-    MPI_Irecv(arr, Ssize, MPI_DOUBLE, 0, 3, data->commHigh, &recvRequest3);
+    MPI_Irecv(recvArr3, Ssize, MPI_DOUBLE, 0, 3, data->commHigh, &recvRequest3);
+
     MPI_Status recvStatus3;
     MPI_Wait(&recvRequest3, &recvStatus3);
 
-    VecRestoreArray(uSinCopy, &arr);
+    VecRestoreArray(uSinCopy, &recvArr3);
 
     Vec vH;
     MatGetVecs(data->Khs, PETSC_NULL, &vH);
@@ -1129,14 +1140,16 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     VecWAXPY(uStarH, -1.0, wS, uH);
 
-    VecGetArray(uStarH, &arr);
+    PetscScalar* sendArr4;
+    VecGetArray(uStarH, &sendArr4);
 
     MPI_Request sendRequest4;
-    MPI_Isend(arr, Ssize, MPI_DOUBLE, 0, 4, data->commHigh, &sendRequest4);
+    MPI_Isend(sendArr4, Ssize, MPI_DOUBLE, 0, 4, data->commHigh, &sendRequest4);
+
     MPI_Status sendStatus4;
     MPI_Wait(&sendRequest4, &sendStatus4);
 
-    VecRestoreArray(uStarH, &arr);
+    VecRestoreArray(uStarH, &sendArr4);
 
     VecDestroy(uSinCopy);
     VecDestroy(uH);
