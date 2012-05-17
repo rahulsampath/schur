@@ -8,10 +8,10 @@ EXEC = bin/testrsd
 all : $(EXEC)
 
 ./src/%.o: ./src/%.$(CEXT)
-	${MYCPP} -c $(MYCPPFLAGS) $(INCLUDE) $< -o $@ 
+	${MYCPP} -c $(INCLUDE) $< -o $@ $(MYCPPFLAGS) 
 	
 bin/testrsd : ./src/testrsd.o ./src/schurUtils.o
-	${MYCPP} $(MYCPPFLAGS) $^ -o $@ $(LIBS)
+	${MYCPP} $^ -o $@ $(LIBS) $(MYCPPFLAGS) 
 
 myclean :
 	rm -rf ./src/*.o ./src/*~
