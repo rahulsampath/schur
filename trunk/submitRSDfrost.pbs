@@ -5,7 +5,7 @@
 #PBS -j oe
 #PBS -m abe
 #PBS -M rahul.sampath@gmail.com
-#PBS -l walltime=0:10:00,nodes=1:ppn=16
+#PBS -l walltime=0:05:00,nodes=1:ppn=16
 #PBS -q batch
 #
 
@@ -17,6 +17,6 @@ export OMP_NUM_THREADS=1
 export MPI_GROUP_MAX=32000
 export MPI_COMM_MAX=32000
 
-mpiexec_mpt -n 2 ./testrsd | tee rsd.txt
+mpiexec_mpt -n 4 ./testrsd | tee rsd.txt
 
 
