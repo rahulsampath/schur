@@ -5,8 +5,8 @@
 #PBS -j oe
 #PBS -m abe
 #PBS -M rahul.sampath@gmail.com
-#PBS -l walltime=0:15:00
-#PBS -l nodes=1:ppn=8
+#PBS -l walltime=0:05:00
+#PBS -l nodes=1:ppn=4
 #PBS -q batch
 #PBS -V
 #
@@ -19,6 +19,6 @@ export OMP_NUM_THREADS=1
 export MPI_GROUP_MAX=32000
 export MPI_COMM_MAX=32000
 
-mpiexec_mpt -n 8 ./testrsd -outer_ksp_type preonly | tee rsd.txt
+mpiexec_mpt -n 4 ./testrsd | tee rsd.txt
 
 
