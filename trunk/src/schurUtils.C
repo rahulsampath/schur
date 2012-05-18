@@ -718,9 +718,8 @@ void createInnerKsp(LocalData* data) {
 void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
   if(root->child) {
     if(root->rankForCurrLevel == (((root->npesForCurrLevel)/2) - 1)) {
-      Vec fL, fStarHigh;
-
-      MatGetVecs(data->Ksl, &fL, &fStarHigh);
+      Vec fStarHigh;
+      MatGetVecs(data->Ksl, PETSC_NULL, &fStarHigh);
 
       PetscScalar* recvArr7;
       VecGetArray(fStarHigh, &recvArr7);
@@ -735,6 +734,9 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       VecDuplicate(u, &fTmp);
 
       RSDapplyInverse(data, root->child, f, fTmp);
+
+      Vec fL;
+      MatGetVecs(data->Ksl, &fL, PETSC_NULL);
 
       Vec fStar, gS, uS; 
       VecDuplicate(fStarHigh, &fStar);
@@ -797,8 +799,8 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
 
       VecDestroy(uS);
     } else if(root->rankForCurrLevel == ((root->npesForCurrLevel)/2)) {
-      Vec fH, uS; 
-      MatGetVecs(data->Ksh, &fH, &uS);
+      Vec uS; 
+      MatGetVecs(data->Ksh, PETSC_NULL, &uS);
 
       PetscInt Ssize;
       VecGetSize(uS, &Ssize);
@@ -813,6 +815,9 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       VecDuplicate(u, &fTmp);
 
       RSDapplyInverse(data, root->child, f, fTmp);
+
+      Vec fH; 
+      MatGetVecs(data->Ksh, &fH, PETSC_NULL);
 
       map<O, H>(data, fTmp, fH);
 
@@ -1113,8 +1118,8 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     VecRestoreArray(uSin, &sendArr3);
   } else {
-    Vec uSinCopy, uH;
-    MatGetVecs(data->Kssh, &uSinCopy, &uH);
+    Vec uSinCopy;
+    MatGetVecs(data->Kssh, &uSinCopy, PETSC_NULL);
 
     PetscInt Ssize;
     VecGetSize(uSinCopy, &Ssize);
@@ -1124,6 +1129,9 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 
     MPI_Request recvRequest3;
     MPI_Irecv(recvArr3, Ssize, MPI_DOUBLE, 0, 3, data->commHigh, &recvRequest3);
+
+    Vec uH;
+    MatGetVecs(data->Kssh, PETSC_NULL, &uH);
 
     Vec vH;
     MatGetVecs(data->Khs, PETSC_NULL, &vH);
