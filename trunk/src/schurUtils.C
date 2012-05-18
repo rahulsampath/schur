@@ -84,9 +84,11 @@ void createLocalData(LocalData* & data) {
   data->mgObj = PETSC_NULL;
 
   data->dofsPerNode = 1;
-  data->N = 17;
+  data->N = 9;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
+  assert((data->N) >= 9);
   PetscOptionsGetInt(PETSC_NULL, "-D", &(data->dofsPerNode), PETSC_NULL);
+  assert((data->dofsPerNode) >= 1);
 
   int rank;
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
@@ -319,16 +321,16 @@ void createSchurMat(LocalData* data) {
 
 void createMG(LocalData* data) {
   assert(data != NULL);
-  assert(data->N >= 16);
-  int nlevels = (std::floor(log2(data->N))) - 2;
-  assert((8<<(nlevels - 1)) == ((data->N) - 1));
+  int nlevels = 1;
+  PetscOptionsGetInt(PETSC_NULL, "-nlevels", &nlevels, PETSC_NULL);
+  int coarseSize = 1 + (((data->N) - 1)>>(nlevels - 1));
 
   DMMGCreate(PETSC_COMM_SELF, -nlevels, PETSC_NULL, &(data->mgObj));
   DMMGSetOptionsPrefix(data->mgObj, "loc_");
 
   DA da;
-  DACreate2d(PETSC_COMM_SELF, DA_NONPERIODIC, DA_STENCIL_BOX, 9, 9,
-      PETSC_DECIDE, PETSC_DECIDE, 1, 1, PETSC_NULL, PETSC_NULL, &da);
+  DACreate2d(PETSC_COMM_SELF, DA_NONPERIODIC, DA_STENCIL_BOX, coarseSize, coarseSize,
+      PETSC_DECIDE, PETSC_DECIDE, (data->dofsPerNode), 1, PETSC_NULL, PETSC_NULL, &da);
   DMMGSetDM((data->mgObj), (DM)da);
   DADestroy(da);
 
@@ -1331,10 +1333,14 @@ void createLocalMatrices(LocalData* data) {
   int Ne = (data->N) - 1;
 
   if(rank > 0) {
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kssh));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Ksh));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Khs));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Khh));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, ((data->N)*(data->dofsPerNode)), ((data->N)*(data->dofsPerNode)),
+        (9*(data->dofsPerNode)), PETSC_NULL, &(data->Kssh));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, ((data->N)*(data->dofsPerNode)), ((data->N)*(data->dofsPerNode)),
+        (9*(data->dofsPerNode)), PETSC_NULL, &(data->Ksh));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, ((data->N)*(data->dofsPerNode)), ((data->N)*(data->dofsPerNode)),
+        (9*(data->dofsPerNode)), PETSC_NULL, &(data->Khs));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, ((data->N)*(data->dofsPerNode)), ((data->N)*(data->dofsPerNode)),
+        (9*(data->dofsPerNode)), PETSC_NULL, &(data->Khh));
     MatZeroEntries(data->Kssh);
     MatZeroEntries(data->Ksh);
     MatZeroEntries(data->Khs);
@@ -1438,10 +1444,14 @@ void createLocalMatrices(LocalData* data) {
   }
 
   if(rank < (npes - 1)) {
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kssl));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Ksl));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kls));
-    MatCreateSeqAIJ(PETSC_COMM_SELF, data->N, data->N, 9, PETSC_NULL, &(data->Kll));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, ((data->N)*(data->dofsPerNode)), ((data->N)*(data->dofsPerNode)),
+        (9*(data->dofsPerNode)), PETSC_NULL, &(data->Kssl));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, ((data->N)*(data->dofsPerNode)), ((data->N)*(data->dofsPerNode)),
+        (9*(data->dofsPerNode)), PETSC_NULL, &(data->Ksl));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, ((data->N)*(data->dofsPerNode)), ((data->N)*(data->dofsPerNode)),
+        (9*(data->dofsPerNode)), PETSC_NULL, &(data->Kls));
+    MatCreateSeqAIJ(PETSC_COMM_SELF, ((data->N)*(data->dofsPerNode)), ((data->N)*(data->dofsPerNode)),
+        (9*(data->dofsPerNode)), PETSC_NULL, &(data->Kll));
     MatZeroEntries(data->Kssl);
     MatZeroEntries(data->Ksl);
     MatZeroEntries(data->Kls);

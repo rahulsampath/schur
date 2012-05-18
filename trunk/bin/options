@@ -4,6 +4,7 @@
 %-options_left
 
 -N 17
+-nlevels 2
 -D 1
 
 %-outer_ksp_type preonly
