@@ -1114,11 +1114,6 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     MPI_Request recvRequest3;
     MPI_Irecv(recvArr3, Ssize, MPI_DOUBLE, 0, 3, data->commHigh, &recvRequest3);
 
-    MPI_Status recvStatus3;
-    MPI_Wait(&recvRequest3, &recvStatus3);
-
-    VecRestoreArray(uSinCopy, &recvArr3);
-
     Vec vH;
     MatGetVecs(data->Khs, PETSC_NULL, &vH);
 
@@ -1128,14 +1123,20 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     Vec uStarH;
     VecDuplicate(uH, &uStarH);
 
-    MatMult(data->Kssh, uSinCopy, uH);
-
-    MatMult(data->Khs, uSinCopy, vH);
-
     Vec rhsMg = DMMGGetRHS(data->mgObj);
     Vec solMg = DMMGGetx(data->mgObj);
 
     VecZeroEntries(rhsMg);
+
+    MPI_Status recvStatus3;
+    MPI_Wait(&recvRequest3, &recvStatus3);
+
+    VecRestoreArray(uSinCopy, &recvArr3);
+
+    MatMult(data->Kssh, uSinCopy, uH);
+
+    MatMult(data->Khs, uSinCopy, vH);
+
     map<H, MG>(data, vH, rhsMg);
 
     KSPSolve(DMMGGetKSP(data->mgObj), rhsMg, solMg);
@@ -1152,16 +1153,17 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     MPI_Request sendRequest4;
     MPI_Isend(sendArr4, Ssize, MPI_DOUBLE, 0, 4, data->commHigh, &sendRequest4);
 
-    MPI_Status sendStatus4;
-    MPI_Wait(&sendRequest4, &sendStatus4);
-
-    VecRestoreArray(uStarH, &sendArr4);
-
     VecDestroy(uSinCopy);
     VecDestroy(uH);
     VecDestroy(vH);
     VecDestroy(wH);
     VecDestroy(wS);
+
+    MPI_Status sendStatus4;
+    MPI_Wait(&sendRequest4, &sendStatus4);
+
+    VecRestoreArray(uStarH, &sendArr4);
+
     VecDestroy(uStarH);
   }
 }
