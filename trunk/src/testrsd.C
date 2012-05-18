@@ -8,6 +8,7 @@
 double stencil[4][4];
 
 PetscLogEvent outerKspEvent;
+PetscLogEvent rhsEvent;
 PetscCookie rsdCookie;
 
 int main(int argc, char** argv) {
@@ -15,6 +16,7 @@ int main(int argc, char** argv) {
 
   PetscCookieRegister("RSD", &rsdCookie);
   PetscLogEventRegister("OuterKsp", rsdCookie, &outerKspEvent);
+  PetscLogEventRegister("RHS", rsdCookie, &rhsEvent);
 
   int rank, npes;
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
@@ -50,9 +52,26 @@ int main(int argc, char** argv) {
   PetscRandomDestroy(rndCtx);
 
   zeroBoundary(ctx->data, ctx->outerSol);
+
+  MPI_Barrier(PETSC_COMM_WORLD);
+  if(!rank) {
+    std::cout<<"Outer MatVec for RHS ..."<<std::endl<<std::endl;
+  }
+  MPI_Barrier(PETSC_COMM_WORLD);
+
+  PetscLogEventBegin(rhsEvent, 0, 0, 0, 0);
+
   MatMult(ctx->outerMat, ctx->outerSol, ctx->outerRhs);
 
+  PetscLogEventEnd(rhsEvent, 0, 0, 0, 0);
+
   VecZeroEntries(ctx->outerSol);
+
+  MPI_Barrier(PETSC_COMM_WORLD);
+  if(!rank) {
+    std::cout<<"Starting Solve ..."<<std::endl<<std::endl;
+  }
+  MPI_Barrier(PETSC_COMM_WORLD);
 
   PetscLogEventBegin(outerKspEvent, 0, 0, 0, 0);
 
