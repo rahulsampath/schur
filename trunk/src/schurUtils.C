@@ -325,6 +325,13 @@ void createMG(LocalData* data) {
   PetscOptionsGetInt(PETSC_NULL, "-nlevels", &nlevels, PETSC_NULL);
   int coarseSize = 1 + (((data->N) - 1)>>(nlevels - 1));
 
+  int rank;
+  MPI_Comm_rank((data->commAll), &rank);
+  if(!rank) {
+    std::cout<<"nlevels = "<<nlevels<<std::endl;
+    std::cout<<"coarseSize = "<<coarseSize<<std::endl;
+  }
+
   DMMGCreate(PETSC_COMM_SELF, -nlevels, PETSC_NULL, &(data->mgObj));
   DMMGSetOptionsPrefix(data->mgObj, "loc_");
 

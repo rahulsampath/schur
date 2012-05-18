@@ -3,21 +3,22 @@
 %-options_table
 %-options_left
 
--N 17
--nlevels 2
+-N 33
+-nlevels 3
 -D 1
 
-%-outer_ksp_type preonly
 -outer_ksp_max_it 300
 -outer_ksp_monitor
 -outer_ksp_converged_reason
 %-outer_ksp_view
 
 -inner_ksp_max_it 4
-%-inner_pc_type none
 %-inner_ksp_monitor
 %-inner_ksp_converged_reason
 %-inner_ksp_view
+
+%-loc_ksp_type preonly
+%-loc_pc_type lu
 
 -loc_ksp_type cg
 -loc_ksp_max_it 1
