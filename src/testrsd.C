@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
 
   PetscLogEventEnd(rhsEvent, 0, 0, 0, 0);
 
+#if 0
+
   VecZeroEntries(ctx->outerSol);
 
   MPI_Barrier(PETSC_COMM_WORLD);
@@ -84,6 +86,8 @@ int main(int argc, char** argv) {
     std::cout<<"Done Solve"<<std::endl<<std::endl;
   }
   MPI_Barrier(PETSC_COMM_WORLD);
+
+#endif
 
   destroyOuterContext(ctx);
 
