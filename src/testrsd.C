@@ -9,6 +9,7 @@ double stencil[4][4];
 
 PetscLogEvent outerKspEvent;
 PetscLogEvent rhsEvent;
+PetscLogEvent setUpEvent;
 PetscCookie rsdCookie;
 
 int main(int argc, char** argv) {
@@ -17,6 +18,7 @@ int main(int argc, char** argv) {
   PetscCookieRegister("RSD", &rsdCookie);
   PetscLogEventRegister("OuterKsp", rsdCookie, &outerKspEvent);
   PetscLogEventRegister("RHS", rsdCookie, &rhsEvent);
+  PetscLogEventRegister("SetUp", rsdCookie, &setUpEvent);
 
   int rank, npes;
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
@@ -36,8 +38,12 @@ int main(int argc, char** argv) {
 
   computeStencil();
 
+  PetscLogEventBegin(setUpEvent, 0, 0, 0, 0);
+
   OuterContext* ctx;
   createOuterContext(ctx);
+
+  PetscLogEventEnd(setUpEvent, 0, 0, 0, 0);
 
   const unsigned int seed = (0x3456782  + (54763*rank));
 
