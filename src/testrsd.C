@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
   if(D == 1) {
     createPoissonStencil();
   } else {
+    createHardStencil();
   }
 
   PetscLogEventBegin(setUpEvent, 0, 0, 0, 0);
@@ -106,6 +107,7 @@ int main(int argc, char** argv) {
   if(D == 1) {
     destroyPoissonStencil();
   } else {
+    destroyHardStencil();
   }
 
   MPI_Barrier(PETSC_COMM_WORLD);
