@@ -1,7 +1,7 @@
 
 #include "schur.h"
 
-extern double stencil[4][4];
+extern double** stencil;
 
 PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
   assert(J == B);
