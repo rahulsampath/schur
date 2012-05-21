@@ -5,14 +5,13 @@
 int main() {
   FILE*fp = fopen("table.tex", "w");
 
-  //int N[] = {17, 65, 257, 513};
-  //int P[] = {4, 64, 256, 512};
-  int N[] = {513};
-  int P[] = {4, 64, 256};
+  int N[] = {17, 65, 257, 513};
+  int P[] = {4, 64, 256, 512};
   int G[] = {1, 2, 4, 8};
+  const int D = 1;
 
-  const int Nlen = 1;
-  const int Plen = 3;
+  const int Nlen = 4;
+  const int Plen = 4;
   const int Glen = 4;
 
   for(int ni = 0; ni < Nlen; ++ni) {
@@ -20,7 +19,7 @@ int main() {
     for(int pi = 0; pi < Plen; ++pi) {
       for(int gi = 0; gi < Glen; ++gi) {
         char fname[256];
-        sprintf(fname, "rsdN%dP%dG%d.out", N[ni], P[pi], G[gi]);
+        sprintf(fname, "rsdN%dP%dG%dD%d.out", N[ni], P[pi], G[gi], D);
         FILE* inp = fopen(fname, "r");
         int num;
         fscanf(inp, "%d", &num);
