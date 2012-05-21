@@ -48,6 +48,12 @@ enum ListType {
   MG, O, L, H, S 
 };
 
+void createPoissonStencil();
+
+void destroyPoissonStencil();
+
+double Phi(int i, double psi, double eta);
+
 double dPhidPsi(int i, double eta);
 
 double dPhidEta(int i, double psi);
@@ -63,8 +69,6 @@ void createLocalData(LocalData* & data);
 void destroyLocalData(LocalData* data);
 
 void createLocalMatrices(LocalData* data);
-
-void computeStencil();
 
 void createOuterMat(OuterContext* ctx);
 

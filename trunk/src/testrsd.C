@@ -5,7 +5,7 @@
 #include "petsc.h"
 #include "schur.h"
 
-double stencil[4][4];
+double** stencil;
 
 PetscLogEvent outerKspEvent;
 PetscLogEvent rhsEvent;
@@ -37,7 +37,10 @@ int main(int argc, char** argv) {
     std::cout<<"D = "<<D<<std::endl;
   }
 
-  computeStencil();
+  if(D == 1) {
+    createPoissonStencil();
+  } else {
+  }
 
   PetscLogEventBegin(setUpEvent, 0, 0, 0, 0);
 
@@ -99,6 +102,11 @@ int main(int argc, char** argv) {
     std::cout<<"Destroyed Outer Context"<<std::endl<<std::endl;
   }
   MPI_Barrier(PETSC_COMM_WORLD);
+
+  if(D == 1) {
+    destroyPoissonStencil();
+  } else {
+  }
 
   MPI_Barrier(PETSC_COMM_WORLD);
   if(!rank) {
