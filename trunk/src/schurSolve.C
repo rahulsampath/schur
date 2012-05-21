@@ -1,5 +1,4 @@
 
-#include <cmath>
 #include "schur.h"
 #include "schurMaps.h"
 
