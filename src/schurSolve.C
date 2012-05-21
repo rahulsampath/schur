@@ -6,8 +6,11 @@ PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
   LocalData* data;
   MatShellGetContext(mat, (void**)(&data));
 
+  PetscInt locSize; 
+  VecGetLocalSize(in, &locSize);
+
   Vec inSeq, outSeq;
-  VecCreateSeq(PETSC_COMM_SELF, (data->N), &inSeq);
+  VecCreateSeq(PETSC_COMM_SELF, locSize, &inSeq);
   VecDuplicate(inSeq, &outSeq);
 
   PetscScalar *inArr;
