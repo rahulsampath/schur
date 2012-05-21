@@ -90,13 +90,6 @@ void createLocalData(LocalData* & data) {
   PetscOptionsGetInt(PETSC_NULL, "-D", &(data->dofsPerNode), PETSC_NULL);
   assert((data->dofsPerNode) >= 1);
 
-  int rank;
-  MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-  if(!rank) {
-    std::cout<<"N = "<<(data->N)<<std::endl;
-    std::cout<<"D = "<<(data->dofsPerNode)<<std::endl;
-  }
-
   data->commAll = PETSC_COMM_WORLD;
 
   createLowAndHighComms(data);

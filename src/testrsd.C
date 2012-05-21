@@ -18,22 +18,23 @@ int main(int argc, char** argv) {
   PetscCookieRegister("RSD", &rsdCookie);
   PetscLogEventRegister("OuterKsp", rsdCookie, &outerKspEvent);
   PetscLogEventRegister("RHS", rsdCookie, &rhsEvent);
-  PetscLogEventRegister("SetUp", rsdCookie, &setUpEvent);
+  PetscLogEventRegister("RsdSetUp", rsdCookie, &setUpEvent);
 
   int rank, npes;
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   MPI_Comm_size(PETSC_COMM_WORLD, &npes);
 
-  MPI_Barrier(PETSC_COMM_WORLD);
-  if(!rank) {
-    std::cout<<"Npes = "<<npes<<std::endl;
-  } 
-  MPI_Barrier(PETSC_COMM_WORLD);
-
+  int N = 9;
   int G = 1;
+  int D = 1;
+  PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-inner_ksp_max_it", &G, PETSC_NULL);
+  PetscOptionsGetInt(PETSC_NULL, "-D", &D, PETSC_NULL);
   if(!rank) {
+    std::cout<<"N = "<<N<<std::endl;
+    std::cout<<"P = "<<npes<<std::endl;
     std::cout<<"G = "<<G<<std::endl;
+    std::cout<<"D = "<<D<<std::endl;
   }
 
   computeStencil();
