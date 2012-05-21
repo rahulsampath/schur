@@ -267,7 +267,7 @@ void createOuterMat(OuterContext* ctx) {
     onx = ((ctx->data)->N) - 1;
   }
 
-  int locSize = (onx*((ctx->data)->N));
+  int locSize = onx*((ctx->data)->N)*((ctx->data)->dofsPerNode);
 
   Mat mat;
   MatCreateShell(((ctx->data)->commAll), locSize, locSize,
@@ -285,9 +285,11 @@ void createSchurMat(LocalData* data) {
   Mat lowMat = PETSC_NULL;
   Mat highMat = PETSC_NULL;
 
+  int locSize = (data->N)*(data->dofsPerNode);
+
   if((rank%2) == 0) {
     if(rank < (npes - 1)) {
-      MatCreateShell((data->commLow), (data->N), (data->N),
+      MatCreateShell((data->commLow), locSize, locSize,
           PETSC_DETERMINE, PETSC_DETERMINE, data, &lowMat);
     }
   } else {
@@ -302,7 +304,7 @@ void createSchurMat(LocalData* data) {
     }
   } else {
     if(rank < (npes - 1)) {
-      MatCreateShell((data->commLow), (data->N), (data->N),
+      MatCreateShell((data->commLow), locSize, locSize,
           PETSC_DETERMINE, PETSC_DETERMINE, data, &lowMat);
     }
   }
