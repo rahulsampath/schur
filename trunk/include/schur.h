@@ -48,6 +48,10 @@ enum ListType {
   MG, O, L, H, S 
 };
 
+void createHardStencil();
+
+void destroyHardStencil();
+
 void createPoissonStencil();
 
 void destroyPoissonStencil();
