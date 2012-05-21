@@ -10,7 +10,7 @@ all : $(EXEC)
 ./src/%.o: ./src/%.$(CEXT)
 	${MYCPP} -c $(INCLUDE) $< -o $@ $(MYCPPFLAGS) 
 	
-bin/testrsd : ./src/testrsd.o ./src/schurUtils.o
+bin/testrsd : ./src/testrsd.o ./src/schurSolve.o ./src/schurSetup.o ./src/schurAssembly.o ./src/schurStencil.o
 	${MYCPP} $^ -o $@ $(LIBS) $(MYCPPFLAGS) 
 
 myclean :
