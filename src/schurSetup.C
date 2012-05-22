@@ -2,6 +2,8 @@
 #include "schur.h"
 #include <iostream>
 
+extern int DOFS_PER_NODE;
+
 void createOuterContext(OuterContext* & ctx) {
   int rank;
   int npes;
@@ -76,11 +78,10 @@ void createLocalData(LocalData* & data) {
   data->highSchurKsp = PETSC_NULL;
   data->mgObj = PETSC_NULL;
 
-  data->dofsPerNode = 1;
+  data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
   assert((data->N) >= 9);
-  PetscOptionsGetInt(PETSC_NULL, "-D", &(data->dofsPerNode), PETSC_NULL);
   assert((data->dofsPerNode) >= 1);
 
   data->commAll = PETSC_COMM_WORLD;

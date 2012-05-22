@@ -6,6 +6,7 @@
 #include "schur.h"
 
 double** stencil;
+int DOFS_PER_NODE;
 
 PetscLogEvent outerKspEvent;
 PetscLogEvent rhsEvent;
@@ -26,18 +27,18 @@ int main(int argc, char** argv) {
 
   int N = 9;
   int G = 1;
-  int D = 1;
+  int problem = 1;
   PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-inner_ksp_max_it", &G, PETSC_NULL);
-  PetscOptionsGetInt(PETSC_NULL, "-D", &D, PETSC_NULL);
+  PetscOptionsGetInt(PETSC_NULL, "-problem", &problem, PETSC_NULL);
   if(!rank) {
     std::cout<<"N = "<<N<<std::endl;
     std::cout<<"P = "<<npes<<std::endl;
     std::cout<<"G = "<<G<<std::endl;
-    std::cout<<"D = "<<D<<std::endl;
+    std::cout<<"Problem = "<<problem<<std::endl;
   }
 
-  if(D == 1) {
+  if(problem == 1) {
     createPoissonStencil();
   } else {
     createHardStencil();
@@ -104,11 +105,7 @@ int main(int argc, char** argv) {
   }
   MPI_Barrier(PETSC_COMM_WORLD);
 
-  if(D == 1) {
-    destroyPoissonStencil();
-  } else {
-    destroyHardStencil();
-  }
+  destroyStencil();
 
   MPI_Barrier(PETSC_COMM_WORLD);
   if(!rank) {
