@@ -1,5 +1,6 @@
 
 #include "schur.h"
+#include <vector>
 
 extern double** stencil;
 
@@ -9,22 +10,25 @@ PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
   DA da = (DA)(dmmg->dm);
 
   int N;
+  int dofsPerNode;
   DAGetInfo(da, PETSC_NULL, &N, PETSC_NULL, PETSC_NULL, 
       PETSC_NULL, PETSC_NULL, PETSC_NULL, 
-      PETSC_NULL, PETSC_NULL, PETSC_NULL, PETSC_NULL);
+      &dofsPerNode, PETSC_NULL, PETSC_NULL, PETSC_NULL);
 
   MatZeroEntries(J);
 
   int Ne = N - 1;
   for(int yi = 0; yi < Ne; ++yi) {
     for(int xi = 0; xi < Ne; ++xi) {
-      int dofs[4];
-      dofs[0] = (yi*N) + xi;
-      dofs[1] = (yi*N) + xi + 1;
-      dofs[2] = ((yi + 1)*N) + xi;
-      dofs[3] = ((yi + 1)*N) + xi + 1;
-      for(int j = 0; j < 4; j++) {
-        for(int i = 0; i < 4; i++) {
+      std::vector<int> dofs(4*dofsPerNode);
+      for(int d = 0; d < dofsPerNode; ++d) {
+        dofs[(0*dofsPerNode) + d] = (((yi*N) + xi)*dofsPerNode) + d;
+        dofs[(1*dofsPerNode) + d] = (((yi*N) + xi + 1)*dofsPerNode) + d;
+        dofs[(2*dofsPerNode) + d] = ((((yi + 1)*N) + xi)*dofsPerNode) + d;
+        dofs[(3*dofsPerNode) + d] = ((((yi + 1)*N) + xi + 1)*dofsPerNode) + d;
+      }//end d
+      for(int j = 0; j < (4*dofsPerNode); ++j) {
+        for(int i = 0; i < (4*dofsPerNode); i++) {
           MatSetValue(J, dofs[j], dofs[i], stencil[j][i], ADD_VALUES);
         }//end i
       }//end j
@@ -37,153 +41,153 @@ PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
   //Left
   for(int yi = 0; yi < N; ++yi) {
     int xi = 0;
-    int bndDof = (yi*N) + xi;
-    int nhDofs[] = {-1, -1, -1, -1, -1, -1, -1, -1};
+    int bndNd = (yi*N) + xi;
+    int nhNd[] = {-1, -1, -1, -1, -1, -1, -1, -1};
     if(yi > 0) {
       if(xi > 0) {
-        nhDofs[0] = ((yi - 1)*N) + xi - 1;
+        nhNd[0] = ((yi - 1)*N) + xi - 1;
       }
-      nhDofs[1] = ((yi - 1)*N) + xi;
+      nhNd[1] = ((yi - 1)*N) + xi;
       if(xi < (N - 1)) {
-        nhDofs[2] = ((yi - 1)*N) + xi + 1;
+        nhNd[2] = ((yi - 1)*N) + xi + 1;
       }
     }
     if(xi > 0) {
-      nhDofs[3] = (yi*N) + xi - 1;
+      nhNd[3] = (yi*N) + xi - 1;
     }
     if(xi < (N - 1)) {
-      nhDofs[4] = (yi*N) + xi + 1;
+      nhNd[4] = (yi*N) + xi + 1;
     }
     if(yi < (N - 1)) {
       if(xi > 0) {
-        nhDofs[5] = ((yi + 1)*N) + xi - 1;
+        nhNd[5] = ((yi + 1)*N) + xi - 1;
       }
-      nhDofs[6] = ((yi + 1)*N) + xi;   
+      nhNd[6] = ((yi + 1)*N) + xi;   
       if(xi < (N - 1)) {
-        nhDofs[7] = ((yi + 1)*N) + xi + 1;
+        nhNd[7] = ((yi + 1)*N) + xi + 1;
       }
     }
     for(int i = 0; i < 8; ++i) {
-      if(nhDofs[i] != -1) {
-        MatSetValue(J, bndDof, nhDofs[i], 0.0, INSERT_VALUES);
-        MatSetValue(J, nhDofs[i], bndDof, 0.0, INSERT_VALUES);
+      if(nhNd[i] != -1) {
+        MatSetValue(J, bndNd, nhNd[i], 0.0, INSERT_VALUES);
+        MatSetValue(J, nhNd[i], bndNd, 0.0, INSERT_VALUES);
       }
     }//end i
-    MatSetValue(J, bndDof, bndDof, 1.0, INSERT_VALUES);
+    MatSetValue(J, bndNd, bndNd, 1.0, INSERT_VALUES);
   }//end yi
 
   //Right
   for(int yi = 0; yi < N; ++yi) {
     int xi = (N - 1);
-    int bndDof = (yi*N) + xi;
-    int nhDofs[] = {-1, -1, -1, -1, -1, -1, -1, -1};
+    int bndNd = (yi*N) + xi;
+    int nhNd[] = {-1, -1, -1, -1, -1, -1, -1, -1};
     if(yi > 0) {
       if(xi > 0) {
-        nhDofs[0] = ((yi - 1)*N) + xi - 1;
+        nhNd[0] = ((yi - 1)*N) + xi - 1;
       }
-      nhDofs[1] = ((yi - 1)*N) + xi;
+      nhNd[1] = ((yi - 1)*N) + xi;
       if(xi < (N - 1)) {
-        nhDofs[2] = ((yi - 1)*N) + xi + 1;
+        nhNd[2] = ((yi - 1)*N) + xi + 1;
       }
     }
     if(xi > 0) {
-      nhDofs[3] = (yi*N) + xi - 1;
+      nhNd[3] = (yi*N) + xi - 1;
     }
     if(xi < (N - 1)) {
-      nhDofs[4] = (yi*N) + xi + 1;
+      nhNd[4] = (yi*N) + xi + 1;
     }
     if(yi < (N - 1)) {
       if(xi > 0) {
-        nhDofs[5] = ((yi + 1)*N) + xi - 1;
+        nhNd[5] = ((yi + 1)*N) + xi - 1;
       }
-      nhDofs[6] = ((yi + 1)*N) + xi;   
+      nhNd[6] = ((yi + 1)*N) + xi;   
       if(xi < (N - 1)) {
-        nhDofs[7] = ((yi + 1)*N) + xi + 1;
+        nhNd[7] = ((yi + 1)*N) + xi + 1;
       }
     }
     for(int i = 0; i < 8; ++i) {
-      if(nhDofs[i] != -1) {
-        MatSetValue(J, bndDof, nhDofs[i], 0.0, INSERT_VALUES);
-        MatSetValue(J, nhDofs[i], bndDof, 0.0, INSERT_VALUES);
+      if(nhNd[i] != -1) {
+        MatSetValue(J, bndNd, nhNd[i], 0.0, INSERT_VALUES);
+        MatSetValue(J, nhNd[i], bndNd, 0.0, INSERT_VALUES);
       }
     }//end i
-    MatSetValue(J, bndDof, bndDof, 1.0, INSERT_VALUES);
+    MatSetValue(J, bndNd, bndNd, 1.0, INSERT_VALUES);
   }//end yi
 
   //Top
   for(int xi = 0; xi < N; ++xi) {
     int yi = (N - 1);
-    int bndDof = (yi*N) + xi;
-    int nhDofs[] = {-1, -1, -1, -1, -1, -1, -1, -1};
+    int bndNd = (yi*N) + xi;
+    int nhNd[] = {-1, -1, -1, -1, -1, -1, -1, -1};
     if(yi > 0) {
       if(xi > 0) {
-        nhDofs[0] = ((yi - 1)*N) + xi - 1;
+        nhNd[0] = ((yi - 1)*N) + xi - 1;
       }
-      nhDofs[1] = ((yi - 1)*N) + xi;
+      nhNd[1] = ((yi - 1)*N) + xi;
       if(xi < (N - 1)) {
-        nhDofs[2] = ((yi - 1)*N) + xi + 1;
+        nhNd[2] = ((yi - 1)*N) + xi + 1;
       }
     }
     if(xi > 0) {
-      nhDofs[3] = (yi*N) + xi - 1;
+      nhNd[3] = (yi*N) + xi - 1;
     }
     if(xi < (N - 1)) {
-      nhDofs[4] = (yi*N) + xi + 1;
+      nhNd[4] = (yi*N) + xi + 1;
     }
     if(yi < (N - 1)) {
       if(xi > 0) {
-        nhDofs[5] = ((yi + 1)*N) + xi - 1;
+        nhNd[5] = ((yi + 1)*N) + xi - 1;
       }
-      nhDofs[6] = ((yi + 1)*N) + xi;   
+      nhNd[6] = ((yi + 1)*N) + xi;   
       if(xi < (N - 1)) {
-        nhDofs[7] = ((yi + 1)*N) + xi + 1;
+        nhNd[7] = ((yi + 1)*N) + xi + 1;
       }
     }
     for(int i = 0; i < 8; ++i) {
-      if(nhDofs[i] != -1) {
-        MatSetValue(J, bndDof, nhDofs[i], 0.0, INSERT_VALUES);
-        MatSetValue(J, nhDofs[i], bndDof, 0.0, INSERT_VALUES);
+      if(nhNd[i] != -1) {
+        MatSetValue(J, bndNd, nhNd[i], 0.0, INSERT_VALUES);
+        MatSetValue(J, nhNd[i], bndNd, 0.0, INSERT_VALUES);
       }
     }//end i
-    MatSetValue(J, bndDof, bndDof, 1.0, INSERT_VALUES);
+    MatSetValue(J, bndNd, bndNd, 1.0, INSERT_VALUES);
   }//end xi
 
   //Bottom
   for(int xi = 0; xi < N; ++xi) {
     int yi = 0;
-    int bndDof = (yi*N) + xi;
-    int nhDofs[] = {-1, -1, -1, -1, -1, -1, -1, -1};
+    int bndNd = (yi*N) + xi;
+    int nhNd[] = {-1, -1, -1, -1, -1, -1, -1, -1};
     if(yi > 0) {
       if(xi > 0) {
-        nhDofs[0] = ((yi - 1)*N) + xi - 1;
+        nhNd[0] = ((yi - 1)*N) + xi - 1;
       }
-      nhDofs[1] = ((yi - 1)*N) + xi;
+      nhNd[1] = ((yi - 1)*N) + xi;
       if(xi < (N - 1)) {
-        nhDofs[2] = ((yi - 1)*N) + xi + 1;
+        nhNd[2] = ((yi - 1)*N) + xi + 1;
       }
     }
     if(xi > 0) {
-      nhDofs[3] = (yi*N) + xi - 1;
+      nhNd[3] = (yi*N) + xi - 1;
     }
     if(xi < (N - 1)) {
-      nhDofs[4] = (yi*N) + xi + 1;
+      nhNd[4] = (yi*N) + xi + 1;
     }
     if(yi < (N - 1)) {
       if(xi > 0) {
-        nhDofs[5] = ((yi + 1)*N) + xi - 1;
+        nhNd[5] = ((yi + 1)*N) + xi - 1;
       }
-      nhDofs[6] = ((yi + 1)*N) + xi;   
+      nhNd[6] = ((yi + 1)*N) + xi;   
       if(xi < (N - 1)) {
-        nhDofs[7] = ((yi + 1)*N) + xi + 1;
+        nhNd[7] = ((yi + 1)*N) + xi + 1;
       }
     }
     for(int i = 0; i < 8; ++i) {
-      if(nhDofs[i] != -1) {
-        MatSetValue(J, bndDof, nhDofs[i], 0.0, INSERT_VALUES);
-        MatSetValue(J, nhDofs[i], bndDof, 0.0, INSERT_VALUES);
+      if(nhNd[i] != -1) {
+        MatSetValue(J, bndNd, nhNd[i], 0.0, INSERT_VALUES);
+        MatSetValue(J, nhNd[i], bndNd, 0.0, INSERT_VALUES);
       }
     }//end i
-    MatSetValue(J, bndDof, bndDof, 1.0, INSERT_VALUES);
+    MatSetValue(J, bndNd, bndNd, 1.0, INSERT_VALUES);
   }//end xi
 
   MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
