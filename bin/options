@@ -3,24 +3,24 @@
 %-options_table
 %-options_left
 
--N 33
--nlevels 3
--problem 1
+%-problem 1
+%-N 33
+-nlevels 1
 
--outer_ksp_max_it 300
+-outer_ksp_max_it 1000
 -outer_ksp_monitor
 -outer_ksp_converged_reason
 %-outer_ksp_view
 
--inner_ksp_max_it 4
+%-inner_ksp_max_it 4
 %-inner_ksp_monitor
 %-inner_ksp_converged_reason
 %-inner_ksp_view
 
-%-loc_ksp_type preonly
-%-loc_pc_type lu
+-loc_ksp_type preonly
+-loc_pc_type lu
+%-loc_pc_type mg
 
--loc_ksp_type cg
 -loc_ksp_max_it 1
 -loc_ksp_rtol 1e-12
 -loc_ksp_atol 1e-12
@@ -29,7 +29,6 @@
 %-loc_ksp_view
 
 %Options for the Standard MG scheme
--loc_pc_type mg
 -loc_pc_mg_type multiplicative
 -loc_pc_mg_multiplicative_cycles 1
 -loc_pc_mg_cycle_type v
