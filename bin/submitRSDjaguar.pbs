@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+#PBS -A NFI007FP
+#PBS -j oe
+#PBS -l gres=widow2
+#PBS -V
+#PBS -l size=2048
+#PBS -l walltime=30:00
+#PBS -N rsdN513P2048G1C1
+#
+
+cd $PBS_O_WORKDIR
+
+aprun -n 2048 -S4 -d2 ./testrsd -N 513 -nlevels 7 -inner_ksp_max_it 1 -problem 1
+
+echo Finished
+
