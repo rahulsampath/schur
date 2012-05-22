@@ -4,8 +4,10 @@
 #include "schur.h"
 
 extern double** stencil;
+extern int DOFS_PER_NODE;
 
 void createHardStencil() {
+  DOFS_PER_NODE = 2;
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
   typedef double* doublePtr;
   stencil = new doublePtr[8];
@@ -30,15 +32,8 @@ void createHardStencil() {
   }//end j
 }
 
-void destroyHardStencil() {
-  for(int j = 0; j < 8; ++j) {
-    delete [] (stencil[j]);
-  }//end j
-  delete [] stencil;
-}
-
-
 void createPoissonStencil() {
+  DOFS_PER_NODE = 1;
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
   typedef double* doublePtr;
   stencil = new doublePtr[4];
@@ -60,8 +55,8 @@ void createPoissonStencil() {
   }//end j
 }
 
-void destroyPoissonStencil() {
-  for(int j = 0; j < 4; ++j) {
+void destroyStencil() {
+  for(int j = 0; j < (4*DOFS_PER_NODE); ++j) {
     delete [] (stencil[j]);
   }//end j
   delete [] stencil;
