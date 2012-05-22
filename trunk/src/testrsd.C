@@ -40,8 +40,10 @@ int main(int argc, char** argv) {
 
   if(problem == 1) {
     createPoissonStencil();
-  } else {
+  } else if(problem == 2) {
     createHardStencil();
+  } else {
+    assert(false);
   }
 
   PetscLogEventBegin(setUpEvent, 0, 0, 0, 0);
