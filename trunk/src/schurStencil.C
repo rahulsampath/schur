@@ -7,6 +7,8 @@ extern double** stencil;
 extern int DOFS_PER_NODE;
 
 void createHardStencil() {
+  const int epsilon = 0.01;
+  const int kappa = 100;
   DOFS_PER_NODE = 2;
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
   typedef double* doublePtr;
