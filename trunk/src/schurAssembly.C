@@ -17,10 +17,10 @@ PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
 
   MatZeroEntries(J);
 
+  int* dofs = new int[4*dofsPerNode];
   int Ne = N - 1;
   for(int yi = 0; yi < Ne; ++yi) {
     for(int xi = 0; xi < Ne; ++xi) {
-      std::vector<int> dofs(4*dofsPerNode);
       for(int d = 0; d < dofsPerNode; ++d) {
         dofs[(0*dofsPerNode) + d] = (((yi*N) + xi)*dofsPerNode) + d;
         dofs[(1*dofsPerNode) + d] = (((yi*N) + xi + 1)*dofsPerNode) + d;
@@ -34,6 +34,8 @@ PetscErrorCode computeMGmatrix(DMMG dmmg, Mat J, Mat B) {
       }//end j
     }//end xi
   }//end yi
+  delete [] dofs;
+  dofs = NULL;
 
   MatAssemblyBegin(J, MAT_FLUSH_ASSEMBLY);
   MatAssemblyEnd(J, MAT_FLUSH_ASSEMBLY);
