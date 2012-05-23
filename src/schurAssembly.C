@@ -495,7 +495,9 @@ void zeroBoundary(LocalData* data, Vec vec) {
   if(rank == 0) {
     for(int yi = 0; yi < (data->N); ++yi) {
       int xi = oxs;
-      arr[(yi*onx) + (xi - oxs)] = 0;
+      for(int d = 0; d < (data->dofsPerNode); ++d) {
+        arr[(((yi*onx) + (xi - oxs))*(data->dofsPerNode)) + d] = 0;
+      }//end d
     }//end for yi
   }
 
@@ -503,20 +505,26 @@ void zeroBoundary(LocalData* data, Vec vec) {
   if(rank == (npes - 1)) {
     for(int yi = 0; yi < (data->N); ++yi) {
       int xi = (oxs + onx) - 1;
-      arr[(yi*onx) + (xi - oxs)] = 0;
+      for(int d = 0; d < (data->dofsPerNode); ++d) {
+        arr[(((yi*onx) + (xi - oxs))*(data->dofsPerNode)) + d] = 0;
+      }//end d
     }//end for yi
   }
 
   //Top
   for(int xi = oxs; xi < (oxs + onx); ++xi) {
     int yi = (data->N) - 1;
-    arr[(yi*onx) + (xi - oxs)] = 0;
+    for(int d = 0; d < (data->dofsPerNode); ++d) {
+      arr[(((yi*onx) + (xi - oxs))*(data->dofsPerNode)) + d] = 0;
+    }//end d
   }//end for xi
 
   //Bottom
   for(int xi = oxs; xi < (oxs + onx); ++xi) {
     int yi = 0;
-    arr[(yi*onx) + (xi - oxs)] = 0;
+    for(int d = 0; d < (data->dofsPerNode); ++d) {
+      arr[(((yi*onx) + (xi - oxs))*(data->dofsPerNode)) + d] = 0;
+    }//end d
   }//end for xi
 
   VecRestoreArray(vec, &arr);
