@@ -251,9 +251,11 @@ void createLocalMatrices(LocalData* data) {
   MPI_Comm_rank(data->commAll, &rank);
   MPI_Comm_size(data->commAll, &npes);
 
-  int Ne = (data->N) - 1;
-  int locSize = ((data->N)*(data->dofsPerNode));
-  int numNonZeros = (9*(data->dofsPerNode));
+  const int N = data->N;
+  const int dofsPerNode = data->dofsPerNode;
+  const int Ne = N - 1;
+  const int locSize = N*dofsPerNode;
+  const int numNonZeros = 9*dofsPerNode;
 
   if(rank > 0) {
     MatCreateSeqAIJ(PETSC_COMM_SELF, locSize, locSize, numNonZeros, PETSC_NULL, &(data->Kssh));
@@ -271,9 +273,14 @@ void createLocalMatrices(LocalData* data) {
       dofs[0] = yi;
       dofs[1] = yi + 1;
       for(int j = 0; j < 2; j++) {
-        for(int i = 0; i < 2; i++) {
-          MatSetValue(data->Kssh, dofs[j], dofs[i], stencil[dofId[j]][dofId[i]], ADD_VALUES);
-        }//end i
+        for(int dj = 0; dj < dofsPerNode; ++dj) {
+          for(int i = 0; i < 2; i++) {
+            for(int di = 0; di < dofsPerNode; ++di) {
+              MatSetValue(data->Kssh, ((dofs[j]*dofsPerNode) + dj), ((dofs[i]*dofsPerNode) + di), 
+                  stencil[(dofId[j]*dofsPerNode) + dj][(dofId[i]*dofsPerNode) + di], ADD_VALUES);
+            }//end di
+          }//end i
+        }//end dj
       }//end j
     }//end yi
 
@@ -283,9 +290,9 @@ void createLocalMatrices(LocalData* data) {
     MatSetValue(data->Kssh, 0, 1, 0.0, INSERT_VALUES);
     MatSetValue(data->Kssh, 1, 0, 0.0, INSERT_VALUES);
     MatSetValue(data->Kssh, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kssh, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, (N - 1), (N - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, (N - 2), (N - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kssh, (N - 1), (N - 1), 0.0, INSERT_VALUES);
 
     MatAssemblyBegin(data->Kssh, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(data->Kssh, MAT_FINAL_ASSEMBLY);
@@ -297,10 +304,16 @@ void createLocalMatrices(LocalData* data) {
       dofs[0] = yi;
       dofs[1] = yi + 1;
       for(int si = 0; si < 2; si++) {
-        for(int hi = 0; hi < 2; hi++) {
-          MatSetValue(data->Ksh, dofs[si], dofs[hi], stencil[sDofId[si]][hDofId[hi]], ADD_VALUES);
-          MatSetValue(data->Khs, dofs[hi], dofs[si], stencil[hDofId[hi]][sDofId[si]], ADD_VALUES);
-        }//end hi
+        for(int ds = 0; ds < dofsPerNode; ++ds) {
+          for(int hi = 0; hi < 2; hi++) {
+            for(int dh = 0; dh < dofsPerNode; ++dh) {
+              MatSetValue(data->Ksh, ((dofs[si]*dofsPerNode) + ds), ((dofs[hi]*dofsPerNode) + dh),
+                  stencil[(sDofId[si]*dofsPerNode) + ds][(hDofId[hi]*dofsPerNode) + dh], ADD_VALUES);
+              MatSetValue(data->Khs, ((dofs[hi]*dofsPerNode) + dh), ((dofs[si]*dofsPerNode) + ds),
+                  stencil[(hDofId[hi]*dofsPerNode) + dh][(sDofId[si]*dofsPerNode) + ds], ADD_VALUES);
+            }//end dh
+          }//end hi
+        }//end ds
       }//end si
     }//end yi
 
@@ -312,16 +325,16 @@ void createLocalMatrices(LocalData* data) {
     MatSetValue(data->Ksh, 0, 1, 0.0, INSERT_VALUES);
     MatSetValue(data->Ksh, 1, 0, 0.0, INSERT_VALUES);
     MatSetValue(data->Ksh, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksh, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksh, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksh, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksh, (N - 1), (N - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksh, (N - 2), (N - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksh, (N - 1), (N - 1), 0.0, INSERT_VALUES);
 
     MatSetValue(data->Khs, 0, 1, 0.0, INSERT_VALUES);
     MatSetValue(data->Khs, 1, 0, 0.0, INSERT_VALUES);
     MatSetValue(data->Khs, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Khs, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Khs, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Khs, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khs, (N - 1), (N - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khs, (N - 2), (N - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Khs, (N - 1), (N - 1), 0.0, INSERT_VALUES);
 
     MatAssemblyBegin(data->Ksh, MAT_FINAL_ASSEMBLY);
     MatAssemblyBegin(data->Khs, MAT_FINAL_ASSEMBLY);
@@ -335,10 +348,16 @@ void createLocalMatrices(LocalData* data) {
       dofs[0] = yi;
       dofs[1] = yi + 1;
       for(int j = 0; j < 2; j++) {
-        for(int i = 0; i < 2; i++) {
-          MatSetValue(data->Khh, dofs[j], dofs[i], stencil[e1DofId[j]][e1DofId[i]], ADD_VALUES);
-          MatSetValue(data->Khh, dofs[j], dofs[i], stencil[e2DofId[j]][e2DofId[i]], ADD_VALUES);
-        }//end i
+        for(int dj = 0; dj < dofsPerNode; ++dj) {
+          for(int i = 0; i < 2; i++) {
+            for(int di = 0; di < dofsPerNode; ++di) {
+              MatSetValue(data->Khh, ((dofs[j]*dofsPerNode) + dj), ((dofs[i]*dofsPerNode) + di), 
+                  stencil[(e1DofId[j]*dofsPerNode) + dj][(e1DofId[i]*dofsPerNode) + di], ADD_VALUES);
+              MatSetValue(data->Khh, ((dofs[j]*dofsPerNode) + dj), ((dofs[i]*dofsPerNode) + di),
+                  stencil[(e2DofId[j]*dofsPerNode) + dj][(e2DofId[i]*dofsPerNode) + di], ADD_VALUES);
+            }//end di
+          }//end i
+        }//end dj
       }//end j
     }//end yi
 
@@ -418,16 +437,16 @@ void createLocalMatrices(LocalData* data) {
     MatSetValue(data->Ksl, 0, 1, 0.0, INSERT_VALUES);
     MatSetValue(data->Ksl, 1, 0, 0.0, INSERT_VALUES);
     MatSetValue(data->Ksl, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksl, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksl, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Ksl, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, (N - 1), (N - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, (N - 2), (N - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Ksl, (N - 1), (N - 1), 0.0, INSERT_VALUES);
 
     MatSetValue(data->Kls, 0, 1, 0.0, INSERT_VALUES);
     MatSetValue(data->Kls, 1, 0, 0.0, INSERT_VALUES);
     MatSetValue(data->Kls, 0, 0, 0.0, INSERT_VALUES);
-    MatSetValue(data->Kls, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kls, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kls, ((data->N) - 1), ((data->N) - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, (N - 1), (N - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, (N - 2), (N - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kls, (N - 1), (N - 1), 0.0, INSERT_VALUES);
 
     MatAssemblyBegin(data->Ksl, MAT_FINAL_ASSEMBLY);
     MatAssemblyBegin(data->Kls, MAT_FINAL_ASSEMBLY);
@@ -454,9 +473,9 @@ void createLocalMatrices(LocalData* data) {
     MatSetValue(data->Kll, 0, 1, 0.0, INSERT_VALUES);
     MatSetValue(data->Kll, 1, 0, 0.0, INSERT_VALUES);
     MatSetValue(data->Kll, 0, 0, 1.0, INSERT_VALUES);
-    MatSetValue(data->Kll, ((data->N) - 1), ((data->N) - 2), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kll, ((data->N) - 2), ((data->N) - 1), 0.0, INSERT_VALUES);
-    MatSetValue(data->Kll, ((data->N) - 1), ((data->N) - 1), 1.0, INSERT_VALUES);
+    MatSetValue(data->Kll, (N - 1), (N - 2), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, (N - 2), (N - 1), 0.0, INSERT_VALUES);
+    MatSetValue(data->Kll, (N - 1), (N - 1), 1.0, INSERT_VALUES);
 
     MatAssemblyBegin(data->Kll, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(data->Kll, MAT_FINAL_ASSEMBLY);
@@ -473,51 +492,54 @@ void zeroBoundary(LocalData* data, Vec vec) {
   MPI_Comm_rank(data->commAll, &rank);
   MPI_Comm_size(data->commAll, &npes);
 
-  PetscScalar* arr;
-  VecGetArray(vec, &arr);
+  const int dofsPerNode = data->dofsPerNode;
+  const int N = data->N;
 
   int oxs, onx;
   if(rank == 0) {
     oxs = 0;
-    onx = data->N;
+    onx = N;
   } else {
     oxs = 1;
-    onx = (data->N) - 1;
+    onx = N - 1;
   }
+
+  PetscScalar* arr;
+  VecGetArray(vec, &arr);
 
   //Left
   if(rank == 0) {
-    for(int yi = 0; yi < (data->N); ++yi) {
-      int xi = oxs;
-      for(int d = 0; d < (data->dofsPerNode); ++d) {
-        arr[(((yi*onx) + (xi - oxs))*(data->dofsPerNode)) + d] = 0;
+    for(int yi = 0; yi < N; ++yi) {
+      int xi = 0;
+      for(int d = 0; d < dofsPerNode; ++d) {
+        arr[(((yi*onx) + xi)*dofsPerNode) + d] = 0;
       }//end d
     }//end for yi
   }
 
   //Right
   if(rank == (npes - 1)) {
-    for(int yi = 0; yi < (data->N); ++yi) {
-      int xi = (oxs + onx) - 1;
-      for(int d = 0; d < (data->dofsPerNode); ++d) {
-        arr[(((yi*onx) + (xi - oxs))*(data->dofsPerNode)) + d] = 0;
+    for(int yi = 0; yi < N; ++yi) {
+      int xi = onx - 1;
+      for(int d = 0; d < dofsPerNode; ++d) {
+        arr[(((yi*onx) + xi)*dofsPerNode) + d] = 0;
       }//end d
     }//end for yi
   }
 
   //Top
-  for(int xi = oxs; xi < (oxs + onx); ++xi) {
-    int yi = (data->N) - 1;
-    for(int d = 0; d < (data->dofsPerNode); ++d) {
-      arr[(((yi*onx) + (xi - oxs))*(data->dofsPerNode)) + d] = 0;
+  for(int xi = 0; xi < onx; ++xi) {
+    int yi = N - 1;
+    for(int d = 0; d < dofsPerNode; ++d) {
+      arr[(((yi*onx) + xi)*dofsPerNode) + d] = 0;
     }//end d
   }//end for xi
 
   //Bottom
-  for(int xi = oxs; xi < (oxs + onx); ++xi) {
+  for(int xi = 0; xi < onx; ++xi) {
     int yi = 0;
-    for(int d = 0; d < (data->dofsPerNode); ++d) {
-      arr[(((yi*onx) + (xi - oxs))*(data->dofsPerNode)) + d] = 0;
+    for(int d = 0; d < dofsPerNode; ++d) {
+      arr[(((yi*onx) + xi)*dofsPerNode) + d] = 0;
     }//end d
   }//end for xi
 
