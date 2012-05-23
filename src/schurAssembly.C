@@ -422,9 +422,14 @@ void createLocalMatrices(LocalData* data) {
       dofs[0] = yi;
       dofs[1] = yi + 1;
       for(int j = 0; j < 2; ++j) {
-        for(int i = 0; i < 2; ++i) {
-          MatSetValue(Kssl, dofs[j], dofs[i], stencil[dofId[j]][dofId[i]], ADD_VALUES);
-        }//end i
+        for(int dj = 0; dj < dofsPerNode; ++dj) {
+          for(int i = 0; i < 2; ++i) {
+            for(int di = 0; di < dofsPerNode; ++di) {
+              MatSetValue(Kssl, ((dofs[j]*dofsPerNode) + dj), ((dofs[i]*dofsPerNode) + di), 
+                  stencil[(dofId[j]*dofsPerNode) + dj][(dofId[i]*dofsPerNode) + di], ADD_VALUES);
+            }//end di
+          }//end i
+        }//end dj
       }//end j
     }//end yi
 
@@ -457,10 +462,16 @@ void createLocalMatrices(LocalData* data) {
       dofs[0] = yi;
       dofs[1] = yi + 1;
       for(int si = 0; si < 2; ++si) {
-        for(int li = 0; li < 2; ++li) {
-          MatSetValue(Ksl, dofs[si], dofs[li], stencil[sDofId[si]][lDofId[li]], ADD_VALUES);
-          MatSetValue(Kls, dofs[li], dofs[si], stencil[lDofId[li]][sDofId[si]], ADD_VALUES);
-        }//end li
+        for(int ds = 0; ds < dofsPerNode; ++ds) {
+          for(int li = 0; li < 2; ++li) {
+            for(int dl = 0; dl < dofsPerNode; ++dl) {
+              MatSetValue(Ksl, ((dofs[si]*dofsPerNode) + ds), ((dofs[li]*dofsPerNode) + dl), 
+                  stencil[(sDofId[si]*dofsPerNode) + ds][(lDofId[li]*dofsPerNode) + dl], ADD_VALUES);
+              MatSetValue(Kls, ((dofs[li]*dofsPerNode) + dl), ((dofs[si]*dofsPerNode) + ds), 
+                  stencil[(lDofId[li]*dofsPerNode) + dl][(sDofId[si]*dofsPerNode) + ds], ADD_VALUES);
+            }//end dl
+          }//end li
+        }//end ds
       }//end si
     }//end yi
 
@@ -499,10 +510,16 @@ void createLocalMatrices(LocalData* data) {
       dofs[0] = yi;
       dofs[1] = yi + 1;
       for(int j = 0; j < 2; ++j) {
-        for(int i = 0; i < 2; ++i) {
-          MatSetValue(Kll, dofs[j], dofs[i], stencil[e1DofId[j]][e1DofId[i]], ADD_VALUES);
-          MatSetValue(Kll, dofs[j], dofs[i], stencil[e2DofId[j]][e2DofId[i]], ADD_VALUES);
-        }//end i
+        for(int dj = 0; dj < dofsPerNode; ++dj) {
+          for(int i = 0; i < 2; ++i) {
+            for(int di = 0; di < dofsPerNode; ++di) {
+              MatSetValue(Kll, ((dofs[j]*dofsPerNode) + dj), ((dofs[i]*dofsPerNode) + di), 
+                  stencil[(e1DofId[j]*dofsPerNode) + dj][(e1DofId[i]*dofsPerNode) + di], ADD_VALUES);
+              MatSetValue(Kll, ((dofs[j]*dofsPerNode) + dj), ((dofs[i]*dofsPerNode) + di),
+                  stencil[(e2DofId[j]*dofsPerNode) + dj][(e2DofId[i]*dofsPerNode) + di], ADD_VALUES);
+            }//end di
+          }//end i
+        }//end dj
       }//end j
     }//end yi
 
