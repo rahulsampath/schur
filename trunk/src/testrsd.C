@@ -41,7 +41,9 @@ int main(int argc, char** argv) {
   if(problem == 1) {
     createPoissonStencil();
   } else if(problem == 2) {
-    createHardStencil();
+    createHardStencilType1();
+  } else if(problem == 3) {
+    createHardStencilType2();
   } else {
     assert(false);
   }
