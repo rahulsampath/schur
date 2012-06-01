@@ -18,22 +18,44 @@ void createHardStencil() {
   stencil = new doublePtr[8];
   for(int j = 0; j < 8; ++j) {
     stencil[j] = new double[8];
+    for(int k = 0; k < 8; ++k) {
+      stencil[j][k] = 0.0;
+    }//end k
   }//end j
 
   for(int j = 0; j < 4; ++j) {
-    for(int dj = 0; dj < 2; ++dj) {
-      for(int i = 0; i < 4; ++i) {
-        for(int di = 0; di < 2; ++di) {
-          stencil[(j*2) + dj][(i*2) + di] = 0.0;
-          for(int n = 0; n < 2; ++n) {
-            double eta = gaussPts[n];
-            for(int m = 0; m < 2; ++m) {
-              double psi = gaussPts[m];
-            }//end m
-          }//end n
-        }//end di
-      }//end i
-    }//end dj
+    for(int i = 0; i < 4; ++i) {
+      for(int n = 0; n < 2; ++n) {
+        double eta = gaussPts[n];
+        for(int m = 0; m < 2; ++m) {
+          double psi = gaussPts[m];
+          //f1
+          {
+            int dj = 0;
+            int di = 0;
+            stencil[(j*2) + dj][(i*2) + di] += ( (epsilon*dPhidPsi(i, eta)*dPhidPsi(j, eta)) + (dPhidEta(i, psi)*dPhidEta(j, psi)) );
+          }
+          //f2
+          {
+            int dj = 0;
+            int di = 1;
+            stencil[(j*2) + dj][(i*2) + di] += (h*h*kappa*Phi(i, psi, eta)*Phi(j, psi, eta)/4.0);
+          }
+          //f3
+          {
+            int dj = 1;
+            int di = 0;
+            stencil[(j*2) + dj][(i*2) + di] += (-h*h*kappa*Phi(i, psi, eta)*Phi(j, psi, eta)/4.0);
+          }
+          //f4
+          {
+            int dj = 1;
+            int di = 1;
+            stencil[(j*2) + dj][(i*2) + di] += ( (dPhidPsi(i, eta)*dPhidPsi(j, eta)) + (epsilon*dPhidEta(i, psi)*dPhidEta(j, psi)) );
+          }
+        }//end m
+      }//end n
+    }//end i
   }//end j
 }
 
