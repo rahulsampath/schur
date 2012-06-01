@@ -50,7 +50,11 @@ enum ListType {
 
 void createPoissonStencil();
 
-void createHardStencil();
+void createHardStencil(const double epsilon, const double kappa);
+
+void createHardStencilType1();
+
+void createHardStencilType2();
 
 void destroyStencil();
 
