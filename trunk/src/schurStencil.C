@@ -7,6 +7,9 @@ extern double** stencil;
 extern int DOFS_PER_NODE;
 
 void createHardStencil() {
+  int N = 9;
+  PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
+  const double h = 1.0/(static_cast<double>(N));
   const int epsilon = 0.01;
   const int kappa = 100;
   DOFS_PER_NODE = 2;
