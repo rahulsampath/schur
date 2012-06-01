@@ -5,7 +5,7 @@ do
   do
     for G in 1 2 4 8
     do
-      for C in 1 2
+      for C in 1 2 3
       do
         export S=`echo $[2*$P]`
         echo "#!/bin/bash" > myJob.pbs
