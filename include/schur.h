@@ -15,6 +15,13 @@ struct RSDnode {
   int npesForCurrLevel;
 };
 
+struct VecBuf_lowSchurMatMult {
+  int inSeqCnt;
+  int outSeqCnt;
+  std::vector<Vec> inSeq;
+  std::vector<Vec> outSeq;
+};
+
 struct LocalData {
   int N;
   int dofsPerNode;
@@ -26,6 +33,7 @@ struct LocalData {
   Mat lowSchurMat, highSchurMat;
   KSP lowSchurKsp, highSchurKsp;
   DMMG* mgObj;
+  VecBuf_lowSchurMatMult* buf1;
 };
 
 struct OuterContext {
@@ -47,6 +55,10 @@ struct OuterContext {
 enum ListType {
   MG, O, L, H, S 
 };
+
+void createBuf1(VecBuf_lowSchurMatMult* & obj); 
+
+void destroyBuf1(VecBuf_lowSchurMatMult* obj); 
 
 void createPoissonStencil();
 
