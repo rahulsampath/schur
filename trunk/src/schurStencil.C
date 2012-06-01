@@ -6,12 +6,22 @@
 extern double** stencil;
 extern int DOFS_PER_NODE;
 
-void createHardStencil() {
+void createHardStencilType1() {
+  const double epsilon = 0.01;
+  const double kappa = 0.01;
+  createHardStencil(epsilon, kappa);
+}
+
+void createHardStencilType2() {
+  const double epsilon = 0.01;
+  const double kappa = 100;
+  createHardStencil(epsilon, kappa);
+}
+
+void createHardStencil(const double epsilon, const double kappa) {
   int N = 9;
   PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
   const double h = 1.0/(static_cast<double>(N));
-  const int epsilon = 0.01;
-  const int kappa = 100;
   DOFS_PER_NODE = 2;
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
   typedef double* doublePtr;
