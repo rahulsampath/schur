@@ -29,6 +29,13 @@ struct VecBuf_outerMatMult {
   std::vector<Vec> outSeq;
 };
 
+struct VecBuf_outerPCapply {
+  int inSeqCnt;
+  int outSeqCnt;
+  std::vector<Vec> inSeq;
+  std::vector<Vec> outSeq;
+};
+
 struct LocalData {
   int N;
   int dofsPerNode;
@@ -42,6 +49,7 @@ struct LocalData {
   DMMG* mgObj;
   VecBuf_lowSchurMatMult* buf1;
   VecBuf_outerMatMult* buf2; 
+  VecBuf_outerPCapply* buf3; 
 };
 
 struct OuterContext {
@@ -71,6 +79,10 @@ void destroyBuf1(VecBuf_lowSchurMatMult* obj);
 void createBuf2(VecBuf_outerMatMult* & obj); 
 
 void destroyBuf2(VecBuf_outerMatMult* obj); 
+
+void createBuf3(VecBuf_outerPCapply* & obj); 
+
+void destroyBuf3(VecBuf_outerPCapply* obj); 
 
 void createPoissonStencil();
 
