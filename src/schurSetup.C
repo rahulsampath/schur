@@ -100,6 +100,8 @@ void createLocalData(LocalData* & data) {
 }
 
 void destroyLocalData(LocalData* data) {
+  destroyBuf1(data->buf1);
+
   if(data->lowSchurKsp) {
     KSPDestroy(data->lowSchurKsp);
   }
@@ -145,13 +147,28 @@ void destroyLocalData(LocalData* data) {
   if(data->commHigh != MPI_COMM_NULL) {
     MPI_Comm_free(&(data->commHigh));
   }
+
   delete data;
 }
 
 void createBuf1(VecBuf_lowSchurMatMult* & obj) {
+  obj = new VecBuf_lowSchurMatMult;
+  obj->inSeqCnt = 0;
+  obj->outSeqCnt = 0;
+  (obj->inSeq).clear();
+  (obj->outSeq).clear();
 }
 
 void destroyBuf1(VecBuf_lowSchurMatMult* obj) {
+  for(size_t i = 0; i < (obj->inSeq).size(); ++i) {
+    VecDestroy((obj->inSeq)[i]);
+  }//end i
+  for(size_t i = 0; i < (obj->outSeq).size(); ++i) {
+    VecDestroy((obj->outSeq)[i]);
+  }//end i
+  (obj->inSeq).clear();
+  (obj->outSeq).clear();
+  delete obj;
 } 
 
 void createRSDtree(RSDnode *& root, int rank, int npes) {
