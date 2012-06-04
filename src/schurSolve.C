@@ -9,9 +9,25 @@ PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
   PetscInt locSize; 
   VecGetLocalSize(in, &locSize);
 
-  Vec inSeq, outSeq;
-  VecCreateSeq(PETSC_COMM_SELF, locSize, &inSeq);
-  VecDuplicate(inSeq, &outSeq);
+  VecBuf_lowSchurMatMult* buf = data->buf1;
+
+  Vec inSeq;
+  if( (buf->inSeqCnt) < ((buf->inSeq).size()) ) {
+    inSeq = (buf->inSeq)[buf->inSeqCnt];
+  } else {
+    VecCreateSeq(PETSC_COMM_SELF, locSize, &inSeq);
+    (buf->inSeq).push_back(inSeq);
+  }
+  ++(buf->inSeqCnt);
+
+  Vec outSeq;
+  if( (buf->outSeqCnt) < ((buf->outSeq).size()) ) {
+    outSeq = (buf->outSeq)[buf->outSeqCnt];
+  } else {
+    VecDuplicate(inSeq, &outSeq);
+    (buf->outSeq).push_back(outSeq);
+  }
+  ++(buf->outSeqCnt);
 
   PetscScalar *inArr;
   PetscScalar *outArr;
@@ -30,8 +46,8 @@ PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
   VecRestoreArray(in, &inArr);
   VecRestoreArray(out, &outArr);
 
-  VecDestroy(inSeq);
-  VecDestroy(outSeq);
+  --(buf->inSeqCnt);
+  --(buf->outSeqCnt);
 
   return 0;
 }
