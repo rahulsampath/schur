@@ -80,6 +80,7 @@ void createLocalData(LocalData* & data) {
 
   createBuf1(data->buf1); 
   createBuf2(data->buf2); 
+  createBuf3(data->buf3); 
 
   data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
@@ -103,6 +104,7 @@ void createLocalData(LocalData* & data) {
 void destroyLocalData(LocalData* data) {
   destroyBuf1(data->buf1);
   destroyBuf2(data->buf2);
+  destroyBuf3(data->buf3);
 
   if(data->lowSchurKsp) {
     KSPDestroy(data->lowSchurKsp);
@@ -182,6 +184,26 @@ void createBuf2(VecBuf_outerMatMult* & obj) {
 }
 
 void destroyBuf2(VecBuf_outerMatMult* obj) {
+  for(size_t i = 0; i < (obj->inSeq).size(); ++i) {
+    VecDestroy((obj->inSeq)[i]);
+  }//end i
+  for(size_t i = 0; i < (obj->outSeq).size(); ++i) {
+    VecDestroy((obj->outSeq)[i]);
+  }//end i
+  (obj->inSeq).clear();
+  (obj->outSeq).clear();
+  delete obj;
+}
+
+void createBuf3(VecBuf_outerPCapply* & obj) {
+  obj = new VecBuf_outerPCapply;
+  obj->inSeqCnt = 0;
+  obj->outSeqCnt = 0;
+  (obj->inSeq).clear();
+  (obj->outSeq).clear();
+}
+
+void destroyBuf3(VecBuf_outerPCapply* obj) {
   for(size_t i = 0; i < (obj->inSeq).size(); ++i) {
     VecDestroy((obj->inSeq)[i]);
   }//end i

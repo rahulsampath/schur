@@ -112,12 +112,27 @@ PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {
 PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
   OuterContext* ctx = static_cast<OuterContext*>(ptr);
 
-  PetscInt localSize;
-  VecGetLocalSize(in, &localSize);
+  VecBuf_outerPCapply* buf = (ctx->data)->buf3;
 
-  Vec inSeq, outSeq;
-  VecCreateSeq(PETSC_COMM_SELF, localSize, &inSeq);
-  VecDuplicate(inSeq, &outSeq);
+  Vec inSeq;
+  if( (buf->inSeqCnt) < ((buf->inSeq).size()) ) {
+    inSeq = (buf->inSeq)[buf->inSeqCnt];
+  } else {
+    PetscInt locSize; 
+    VecGetLocalSize(in, &locSize);
+    VecCreateSeq(PETSC_COMM_SELF, locSize, &inSeq);
+    (buf->inSeq).push_back(inSeq);
+  }
+  ++(buf->inSeqCnt);
+
+  Vec outSeq;
+  if( (buf->outSeqCnt) < ((buf->outSeq).size()) ) {
+    outSeq = (buf->outSeq)[buf->outSeqCnt];
+  } else {
+    VecDuplicate(inSeq, &outSeq);
+    (buf->outSeq).push_back(outSeq);
+  }
+  ++(buf->outSeqCnt);
 
   PetscScalar *inArr;
   PetscScalar *outArr;
@@ -136,8 +151,8 @@ PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
   VecRestoreArray(in, &inArr);
   VecRestoreArray(out, &outArr);
 
-  VecDestroy(inSeq);
-  VecDestroy(outSeq);
+  --(buf->inSeqCnt);
+  --(buf->outSeqCnt);
 
   return 0;
 }
