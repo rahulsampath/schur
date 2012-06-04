@@ -78,6 +78,8 @@ void createLocalData(LocalData* & data) {
   data->highSchurKsp = PETSC_NULL;
   data->mgObj = PETSC_NULL;
 
+  createBuf1(data->buf1); 
+
   data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
@@ -145,6 +147,12 @@ void destroyLocalData(LocalData* data) {
   }
   delete data;
 }
+
+void createBuf1(VecBuf_lowSchurMatMult* & obj) {
+}
+
+void destroyBuf1(VecBuf_lowSchurMatMult* obj) {
+} 
 
 void createRSDtree(RSDnode *& root, int rank, int npes) {
   root = new RSDnode;
