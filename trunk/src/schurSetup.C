@@ -79,6 +79,7 @@ void createLocalData(LocalData* & data) {
   data->mgObj = PETSC_NULL;
 
   createBuf1(data->buf1); 
+  createBuf2(data->buf2); 
 
   data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
@@ -101,6 +102,7 @@ void createLocalData(LocalData* & data) {
 
 void destroyLocalData(LocalData* data) {
   destroyBuf1(data->buf1);
+  destroyBuf2(data->buf2);
 
   if(data->lowSchurKsp) {
     KSPDestroy(data->lowSchurKsp);
@@ -170,6 +172,26 @@ void destroyBuf1(VecBuf_lowSchurMatMult* obj) {
   (obj->outSeq).clear();
   delete obj;
 } 
+
+void createBuf2(VecBuf_outerMatMult* & obj) {
+  obj = new VecBuf_outerMatMult;
+  obj->inSeqCnt = 0;
+  obj->outSeqCnt = 0;
+  (obj->inSeq).clear();
+  (obj->outSeq).clear();
+}
+
+void destroyBuf2(VecBuf_outerMatMult* obj) {
+  for(size_t i = 0; i < (obj->inSeq).size(); ++i) {
+    VecDestroy((obj->inSeq)[i]);
+  }//end i
+  for(size_t i = 0; i < (obj->outSeq).size(); ++i) {
+    VecDestroy((obj->outSeq)[i]);
+  }//end i
+  (obj->inSeq).clear();
+  (obj->outSeq).clear();
+  delete obj;
+}
 
 void createRSDtree(RSDnode *& root, int rank, int npes) {
   root = new RSDnode;

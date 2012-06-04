@@ -22,6 +22,13 @@ struct VecBuf_lowSchurMatMult {
   std::vector<Vec> outSeq;
 };
 
+struct VecBuf_outerMatMult {
+  int inSeqCnt;
+  int outSeqCnt;
+  std::vector<Vec> inSeq;
+  std::vector<Vec> outSeq;
+};
+
 struct LocalData {
   int N;
   int dofsPerNode;
@@ -34,6 +41,7 @@ struct LocalData {
   KSP lowSchurKsp, highSchurKsp;
   DMMG* mgObj;
   VecBuf_lowSchurMatMult* buf1;
+  VecBuf_outerMatMult* buf2; 
 };
 
 struct OuterContext {
@@ -59,6 +67,10 @@ enum ListType {
 void createBuf1(VecBuf_lowSchurMatMult* & obj); 
 
 void destroyBuf1(VecBuf_lowSchurMatMult* obj); 
+
+void createBuf2(VecBuf_outerMatMult* & obj); 
+
+void destroyBuf2(VecBuf_outerMatMult* obj); 
 
 void createPoissonStencil();
 
