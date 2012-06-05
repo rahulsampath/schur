@@ -462,9 +462,8 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       KmatVec(data, root->child, uIn, uOut);
     }
   } else {
-    Vec uInMg, uOutMg;
-    VecDuplicate(DMMGGetx(data->mgObj), &uInMg);
-    VecDuplicate(uInMg, &uOutMg);
+    Vec uInMg = DMMGGetx(data->mgObj);
+    Vec uOutMg = DMMGGetRHS(data->mgObj);
 
     VecZeroEntries(uInMg);
     map<O, MG>(data, uIn, uInMg);
@@ -473,9 +472,6 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
 
     VecZeroEntries(uOut);
     map<MG, O>(data, uOutMg, uOut);
-
-    VecDestroy(uInMg);
-    VecDestroy(uOutMg);
   }
 }
 
