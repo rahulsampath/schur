@@ -476,6 +476,8 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
 }
 
 void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
+  VecBufType3* buf = data->buf5;
+
   if(isLow) {
     PetscInt Ssize;
     VecGetSize(uSin, &Ssize);

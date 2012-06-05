@@ -96,6 +96,8 @@ void createLocalData(LocalData* & data) {
   (data->buf4)->solKspLow = PETSC_NULL;
   (data->buf4)->solKspHigh = PETSC_NULL;
 
+  data->buf5 = new VecBufType3;
+
   data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
   PetscOptionsGetInt(PETSC_NULL, "-N", &(data->N), PETSC_NULL);
@@ -153,6 +155,8 @@ void destroyLocalData(LocalData* data) {
     VecDestroy((data->buf4)->solKspHigh);
   }
   delete (data->buf4);
+
+  delete (data->buf5);
 
   if(data->lowSchurKsp) {
     KSPDestroy(data->lowSchurKsp);
