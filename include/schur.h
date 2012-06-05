@@ -20,6 +20,13 @@ struct VecBufType1 {
   Vec outSeq;
 };
 
+struct VecBufType2 {
+  Vec rhsKspLow;
+  Vec rhsKspHigh;
+  Vec solKspLow;
+  Vec solKspHigh;
+};
+
 struct LocalData {
   int N;
   int dofsPerNode;
@@ -34,6 +41,7 @@ struct LocalData {
   VecBufType1* buf1;
   VecBufType1* buf2; 
   VecBufType1* buf3; 
+  VecBufType2* buf4;
 };
 
 struct OuterContext {

@@ -615,45 +615,59 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 }
 
 void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol) {
-  Vec rhsKsp;
+  VecBufType2* buf = data->buf4;
+
+  Vec rhsKsp, solKsp;
   if(isLow) {
-    PetscInt localSize;
-    VecGetLocalSize(rhs, &localSize);
-    VecCreateMPI(data->commLow, localSize, PETSC_DETERMINE, &rhsKsp);
+    if(buf->rhsKspLow) {
+      rhsKsp = buf->rhsKspLow;
+    } else {
+      PetscInt localSize;
+      VecGetLocalSize(rhs, &localSize);
+      VecCreateMPI(data->commLow, localSize, PETSC_DETERMINE, &rhsKsp);
+      buf->rhsKspLow = rhsKsp;
+    }
+    if(buf->solKspLow) {
+      solKsp = buf->solKspLow;
+    } else {
+      VecDuplicate(rhsKsp, &solKsp);
+      buf->solKspLow = solKsp;
+    }
   } else {
-    VecCreateMPI(data->commHigh, 0, PETSC_DETERMINE, &rhsKsp);
+    if(buf->rhsKspHigh) {
+      rhsKsp = buf->rhsKspHigh;
+    } else {
+      VecCreateMPI(data->commHigh, 0, PETSC_DETERMINE, &rhsKsp);
+      buf->rhsKspHigh = rhsKsp;
+    }
+    if(buf->solKspHigh) {
+      solKsp = buf->solKspHigh;
+    } else {
+      VecDuplicate(rhsKsp, &solKsp);
+      buf->solKspHigh = solKsp;
+    }
   }
 
-  Vec solKsp;
-  VecDuplicate(rhsKsp, &solKsp);
-
-  PetscScalar *rhsArr;
-  PetscScalar *solArr;
-
   if(isLow) {
+    PetscScalar *rhsArr;
+    PetscScalar *solArr;
+
     VecGetArray(rhs, &rhsArr);
     VecGetArray(sol, &solArr);
 
     VecPlaceArray(rhsKsp, rhsArr);
     VecPlaceArray(solKsp, solArr);
-  }
 
-  if(isLow) {
     KSPSolve(data->lowSchurKsp, rhsKsp, solKsp);
-  } else {
-    KSPSolve(data->highSchurKsp, rhsKsp, solKsp);
-  }
 
-  if(isLow) {
     VecResetArray(rhsKsp);
     VecResetArray(solKsp);
 
     VecRestoreArray(rhs, &rhsArr);
     VecRestoreArray(sol, &solArr);
+  } else {
+    KSPSolve(data->highSchurKsp, rhsKsp, solKsp);
   }
-
-  VecDestroy(rhsKsp);
-  VecDestroy(solKsp);
 }
 
 
