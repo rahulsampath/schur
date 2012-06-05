@@ -78,9 +78,17 @@ void createLocalData(LocalData* & data) {
   data->highSchurKsp = PETSC_NULL;
   data->mgObj = PETSC_NULL;
 
-  createBuf1(data->buf1); 
-  createBuf2(data->buf2); 
-  createBuf3(data->buf3); 
+  data->buf1 = new VecBufType1;
+  (data->buf1)->inSeq = PETSC_NULL;
+  (data->buf1)->outSeq = PETSC_NULL;
+
+  data->buf2 = new VecBufType1;
+  (data->buf2)->inSeq = PETSC_NULL;
+  (data->buf2)->outSeq = PETSC_NULL;
+
+  data->buf3 = new VecBufType1;
+  (data->buf3)->inSeq = PETSC_NULL;
+  (data->buf3)->outSeq = PETSC_NULL;
 
   data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
@@ -102,9 +110,29 @@ void createLocalData(LocalData* & data) {
 }
 
 void destroyLocalData(LocalData* data) {
-  destroyBuf1(data->buf1);
-  destroyBuf2(data->buf2);
-  destroyBuf3(data->buf3);
+  if((data->buf1)->inSeq) {
+    VecDestroy((data->buf1)->inSeq);
+  }
+  if((data->buf1)->outSeq) {
+    VecDestroy((data->buf1)->outSeq);
+  }
+  delete (data->buf1);
+
+  if((data->buf2)->inSeq) {
+    VecDestroy((data->buf2)->inSeq);
+  }
+  if((data->buf2)->outSeq) {
+    VecDestroy((data->buf2)->outSeq);
+  }
+  delete (data->buf2);
+
+  if((data->buf3)->inSeq) {
+    VecDestroy((data->buf3)->inSeq);
+  }
+  if((data->buf3)->outSeq) {
+    VecDestroy((data->buf3)->outSeq);
+  }
+  delete (data->buf3);
 
   if(data->lowSchurKsp) {
     KSPDestroy(data->lowSchurKsp);
@@ -153,66 +181,6 @@ void destroyLocalData(LocalData* data) {
   }
 
   delete data;
-}
-
-void createBuf1(VecBuf_lowSchurMatMult* & obj) {
-  obj = new VecBuf_lowSchurMatMult;
-  obj->inSeqCnt = 0;
-  obj->outSeqCnt = 0;
-  (obj->inSeq).clear();
-  (obj->outSeq).clear();
-}
-
-void destroyBuf1(VecBuf_lowSchurMatMult* obj) {
-  for(size_t i = 0; i < (obj->inSeq).size(); ++i) {
-    VecDestroy((obj->inSeq)[i]);
-  }//end i
-  for(size_t i = 0; i < (obj->outSeq).size(); ++i) {
-    VecDestroy((obj->outSeq)[i]);
-  }//end i
-  (obj->inSeq).clear();
-  (obj->outSeq).clear();
-  delete obj;
-} 
-
-void createBuf2(VecBuf_outerMatMult* & obj) {
-  obj = new VecBuf_outerMatMult;
-  obj->inSeqCnt = 0;
-  obj->outSeqCnt = 0;
-  (obj->inSeq).clear();
-  (obj->outSeq).clear();
-}
-
-void destroyBuf2(VecBuf_outerMatMult* obj) {
-  for(size_t i = 0; i < (obj->inSeq).size(); ++i) {
-    VecDestroy((obj->inSeq)[i]);
-  }//end i
-  for(size_t i = 0; i < (obj->outSeq).size(); ++i) {
-    VecDestroy((obj->outSeq)[i]);
-  }//end i
-  (obj->inSeq).clear();
-  (obj->outSeq).clear();
-  delete obj;
-}
-
-void createBuf3(VecBuf_outerPCapply* & obj) {
-  obj = new VecBuf_outerPCapply;
-  obj->inSeqCnt = 0;
-  obj->outSeqCnt = 0;
-  (obj->inSeq).clear();
-  (obj->outSeq).clear();
-}
-
-void destroyBuf3(VecBuf_outerPCapply* obj) {
-  for(size_t i = 0; i < (obj->inSeq).size(); ++i) {
-    VecDestroy((obj->inSeq)[i]);
-  }//end i
-  for(size_t i = 0; i < (obj->outSeq).size(); ++i) {
-    VecDestroy((obj->outSeq)[i]);
-  }//end i
-  (obj->inSeq).clear();
-  (obj->outSeq).clear();
-  delete obj;
 }
 
 void createRSDtree(RSDnode *& root, int rank, int npes) {
