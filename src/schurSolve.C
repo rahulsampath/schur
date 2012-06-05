@@ -6,27 +6,25 @@ PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
   LocalData* data;
   MatShellGetContext(mat, (void**)(&data));
 
-  VecBuf_lowSchurMatMult* buf = data->buf1;
+  VecBufType1* buf = data->buf1;
 
   Vec inSeq;
-  if( (buf->inSeqCnt) < ((buf->inSeq).size()) ) {
-    inSeq = (buf->inSeq)[buf->inSeqCnt];
+  if(buf->inSeq) {
+    inSeq = buf->inSeq;
   } else {
     PetscInt locSize; 
     VecGetLocalSize(in, &locSize);
     VecCreateSeq(PETSC_COMM_SELF, locSize, &inSeq);
-    (buf->inSeq).push_back(inSeq);
+    buf->inSeq = inSeq;
   }
-  ++(buf->inSeqCnt);
 
   Vec outSeq;
-  if( (buf->outSeqCnt) < ((buf->outSeq).size()) ) {
-    outSeq = (buf->outSeq)[buf->outSeqCnt];
+  if(buf->outSeq) {
+    outSeq = buf->outSeq;
   } else {
     VecDuplicate(inSeq, &outSeq);
-    (buf->outSeq).push_back(outSeq);
+    buf->outSeq = outSeq;
   }
-  ++(buf->outSeqCnt);
 
   PetscScalar *inArr;
   PetscScalar *outArr;
@@ -45,9 +43,6 @@ PetscErrorCode lowSchurMatMult(Mat mat, Vec in, Vec out) {
   VecRestoreArray(in, &inArr);
   VecRestoreArray(out, &outArr);
 
-  --(buf->inSeqCnt);
-  --(buf->outSeqCnt);
-
   return 0;
 }
 
@@ -64,27 +59,25 @@ PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {
   OuterContext* ctx;
   MatShellGetContext(mat, (void**)(&ctx));
 
-  VecBuf_outerMatMult* buf = (ctx->data)->buf2;
+  VecBufType1* buf = (ctx->data)->buf2;
 
   Vec inSeq;
-  if( (buf->inSeqCnt) < ((buf->inSeq).size()) ) {
-    inSeq = (buf->inSeq)[buf->inSeqCnt];
+  if(buf->inSeq) {
+    inSeq = buf->inSeq;
   } else {
     PetscInt locSize; 
     VecGetLocalSize(in, &locSize);
     VecCreateSeq(PETSC_COMM_SELF, locSize, &inSeq);
-    (buf->inSeq).push_back(inSeq);
+    buf->inSeq = inSeq;
   }
-  ++(buf->inSeqCnt);
 
   Vec outSeq;
-  if( (buf->outSeqCnt) < ((buf->outSeq).size()) ) {
-    outSeq = (buf->outSeq)[buf->outSeqCnt];
+  if(buf->outSeq) {
+    outSeq = buf->outSeq;
   } else {
     VecDuplicate(inSeq, &outSeq);
-    (buf->outSeq).push_back(outSeq);
+    buf->outSeq = outSeq;
   }
-  ++(buf->outSeqCnt);
 
   PetscScalar *inArr;
   PetscScalar *outArr;
@@ -103,36 +96,31 @@ PetscErrorCode outerMatMult(Mat mat, Vec in, Vec out) {
   VecRestoreArray(in, &inArr);
   VecRestoreArray(out, &outArr);
 
-  --(buf->inSeqCnt);
-  --(buf->outSeqCnt);
-
   return 0;
 }
 
 PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
   OuterContext* ctx = static_cast<OuterContext*>(ptr);
 
-  VecBuf_outerPCapply* buf = (ctx->data)->buf3;
+  VecBufType1* buf = (ctx->data)->buf3;
 
   Vec inSeq;
-  if( (buf->inSeqCnt) < ((buf->inSeq).size()) ) {
-    inSeq = (buf->inSeq)[buf->inSeqCnt];
+  if(buf->inSeq) {
+    inSeq = buf->inSeq;
   } else {
     PetscInt locSize; 
     VecGetLocalSize(in, &locSize);
     VecCreateSeq(PETSC_COMM_SELF, locSize, &inSeq);
-    (buf->inSeq).push_back(inSeq);
+    buf->inSeq = inSeq;
   }
-  ++(buf->inSeqCnt);
 
   Vec outSeq;
-  if( (buf->outSeqCnt) < ((buf->outSeq).size()) ) {
-    outSeq = (buf->outSeq)[buf->outSeqCnt];
+  if(buf->outSeq) {
+    outSeq = buf->outSeq;
   } else {
     VecDuplicate(inSeq, &outSeq);
-    (buf->outSeq).push_back(outSeq);
+    buf->outSeq = outSeq;
   }
-  ++(buf->outSeqCnt);
 
   PetscScalar *inArr;
   PetscScalar *outArr;
@@ -150,9 +138,6 @@ PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
 
   VecRestoreArray(in, &inArr);
   VecRestoreArray(out, &outArr);
-
-  --(buf->inSeqCnt);
-  --(buf->outSeqCnt);
 
   return 0;
 }
@@ -630,8 +615,7 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
 }
 
 void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol) {
-  Vec rhsKsp, solKsp;
-
+  Vec rhsKsp;
   if(isLow) {
     PetscInt localSize;
     VecGetLocalSize(rhs, &localSize);
@@ -639,6 +623,8 @@ void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol) {
   } else {
     VecCreateMPI(data->commHigh, 0, PETSC_DETERMINE, &rhsKsp);
   }
+
+  Vec solKsp;
   VecDuplicate(rhsKsp, &solKsp);
 
   PetscScalar *rhsArr;

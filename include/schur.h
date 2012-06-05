@@ -15,25 +15,9 @@ struct RSDnode {
   int npesForCurrLevel;
 };
 
-struct VecBuf_lowSchurMatMult {
-  int inSeqCnt;
-  int outSeqCnt;
-  std::vector<Vec> inSeq;
-  std::vector<Vec> outSeq;
-};
-
-struct VecBuf_outerMatMult {
-  int inSeqCnt;
-  int outSeqCnt;
-  std::vector<Vec> inSeq;
-  std::vector<Vec> outSeq;
-};
-
-struct VecBuf_outerPCapply {
-  int inSeqCnt;
-  int outSeqCnt;
-  std::vector<Vec> inSeq;
-  std::vector<Vec> outSeq;
+struct VecBufType1 {
+  Vec inSeq;
+  Vec outSeq;
 };
 
 struct LocalData {
@@ -47,9 +31,9 @@ struct LocalData {
   Mat lowSchurMat, highSchurMat;
   KSP lowSchurKsp, highSchurKsp;
   DMMG* mgObj;
-  VecBuf_lowSchurMatMult* buf1;
-  VecBuf_outerMatMult* buf2; 
-  VecBuf_outerPCapply* buf3; 
+  VecBufType1* buf1;
+  VecBufType1* buf2; 
+  VecBufType1* buf3; 
 };
 
 struct OuterContext {
@@ -71,18 +55,6 @@ struct OuterContext {
 enum ListType {
   MG, O, L, H, S 
 };
-
-void createBuf1(VecBuf_lowSchurMatMult* & obj); 
-
-void destroyBuf1(VecBuf_lowSchurMatMult* obj); 
-
-void createBuf2(VecBuf_outerMatMult* & obj); 
-
-void destroyBuf2(VecBuf_outerMatMult* obj); 
-
-void createBuf3(VecBuf_outerPCapply* & obj); 
-
-void destroyBuf3(VecBuf_outerPCapply* obj); 
 
 void createPoissonStencil();
 
