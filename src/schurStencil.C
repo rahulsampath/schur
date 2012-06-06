@@ -8,7 +8,7 @@ extern int DOFS_PER_NODE;
 
 void createConvectionDiffusionStencil() {
   int N = 9;
-  double PeInv = 10e-3;
+  double PeInv = 1e-4;
   PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
   const double h = 1.0/(static_cast<double>(N));
   DOFS_PER_NODE = 1;
