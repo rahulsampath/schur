@@ -8,7 +8,7 @@ extern int DOFS_PER_NODE;
 
 void createConvectionDiffusionStencil() {
   int N = 9;
-  double Pe = 10e6;
+  double PeInv = 10e-6;
   PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
   const double h = 1.0/(static_cast<double>(N));
   DOFS_PER_NODE = 1;
@@ -28,8 +28,8 @@ void createConvectionDiffusionStencil() {
         double eta = gaussPts[n];
         for(int m = 0; m < 2; ++m) {
           double psi = gaussPts[m];
-          stencil[j][i] += dPhidPsi(j, eta)*Phi(i, psi, eta) + dPhidEta(j, psi)*Phi(i, psi, eta) + Pe * (dPhidPsi(j, eta) + dPhidEta(j, psi)) * dPhidPsi(i, eta) 
-                            + Pe * (dPhidPsi(j, eta) + dPhidEta(j, psi)) * dPhidEta(i, psi); 
+          stencil[j][i] += dPhidPsi(j, eta)*Phi(i, psi, eta) + dPhidEta(j, psi)*Phi(i, psi, eta) + PeInv * (dPhidPsi(j, eta) + dPhidEta(j, psi)) * dPhidPsi(i, eta) 
+                            + PeInv * (dPhidPsi(j, eta) + dPhidEta(j, psi)) * dPhidEta(i, psi); 
         }//end m
       }//end n
     }//end i
