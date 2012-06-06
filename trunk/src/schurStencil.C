@@ -28,7 +28,7 @@ void createConvectionDiffusionStencil() {
         double eta = gaussPts[n];
         for(int m = 0; m < 2; ++m) {
           double psi = gaussPts[m];
-          stencil[j][i] += ( (h/2.)*(dPhidPsi(j, eta)*Phi(i, psi, eta)) + (h/2.)*(dPhidEta(j, psi)*Phi(i, psi, eta)) +
+          stencil[j][i] += ( ((h/2.0)*( (dPhidPsi(j, eta)*Phi(i, psi, eta)) + (dPhidEta(j, psi)*Phi(i, psi, eta)) )) +
               (PeInv*( ( (dPhidPsi(j, eta) + dPhidEta(j, psi))*dPhidPsi(i, eta) ) + 
                        ( (dPhidPsi(j, eta) + dPhidEta(j, psi))*dPhidEta(i, psi) ) ) ) ); 
         }//end m
