@@ -6,6 +6,62 @@
 extern double** stencil;
 extern int DOFS_PER_NODE;
 
+void createLinearElasticMechanicsStencil() {
+  int N = 9;
+  PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
+  const double h = 1.0/(static_cast<double>(N));
+  DOFS_PER_NODE = 2;
+  const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
+  typedef double* doublePtr;
+  stencil = new doublePtr[8];
+  for(int j = 0; j < 8; ++j) {
+    stencil[j] = new double[8];
+    for(int k = 0; k < 8; ++k) {
+      stencil[j][k] = 0.0;
+    }//end k
+  }//end j
+
+  double mu = 75.e+9;
+  double lambda = 113e+9;
+
+  for(int j = 0; j < 4; ++j) {
+    for(int i = 0; i < 4; ++i) {
+      for(int n = 0; n < 2; ++n) {
+        double eta = gaussPts[n];
+        for(int m = 0; m < 2; ++m) {
+          double psi = gaussPts[m];
+          //f1
+          {
+            int dj = 0;
+            int di = 0;
+            stencil[(j*2) + dj][(i*2) + di] += mu *( (dPhidPsi(i, eta)*dPhidPsi(j, eta)) + (dPhidEta(i, psi)*dPhidEta(j, psi)) )
+                                               + (lambda + mu) * (dPhidPsi(i, eta)*dPhidPsi(j, eta))   ;
+          }
+          //f2
+          {
+            int dj = 0;
+            int di = 1;
+            stencil[(j*2) + dj][(i*2) + di] += (lambda + mu) * (dPhidPsi(j, eta)*dPhidEta(i, psi));
+          }
+          //f3
+          {
+            int dj = 1;
+            int di = 0;
+            stencil[(j*2) + dj][(i*2) + di] += (lambda + mu) * (dPhidPsi(i, eta)*dPhidEta(j, psi));
+          }
+          //f4
+          {
+            int dj = 1;
+            int di = 1;
+            stencil[(j*2) + dj][(i*2) + di] += mu *( (dPhidPsi(i, eta)*dPhidPsi(j, eta)) + (dPhidEta(i, psi)*dPhidEta(j, psi)) )
+                                               + (lambda + mu) * (dPhidPsi(i, eta)*dPhidPsi(j, eta))   ;
+          }
+        }//end m
+      }//end n
+    }//end i
+  }//end j
+}
+
 void createConvectionDiffusionStencil() {
   int N = 9;
   double PeInv = 1e-4;

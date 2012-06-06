@@ -98,6 +98,8 @@ enum ListType {
   MG, O, L, H, S 
 };
 
+void createLinearElasticMechanicsStencil();
+
 void createConvectionDiffusionStencil();
 
 void createPoissonStencil();
