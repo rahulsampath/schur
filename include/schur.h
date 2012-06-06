@@ -89,6 +89,8 @@ void createHardStencilType1();
 
 void createHardStencilType2();
 
+void createConvectionDiffusionStencil();
+
 void destroyStencil();
 
 double Phi(int i, double psi, double eta);
