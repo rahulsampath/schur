@@ -7,7 +7,7 @@
 %-N 33
 -nlevels 1
 
--outer_ksp_max_it 1000
+-outer_ksp_max_it 10000
 -outer_ksp_monitor
 -outer_ksp_converged_reason
 %-outer_ksp_view

@@ -68,6 +68,8 @@ enum ListType {
   MG, O, L, H, S 
 };
 
+void createConvectionDiffusionStencil();
+
 void createPoissonStencil();
 
 void createHardStencil(const double epsilon, const double kappa);
