@@ -91,10 +91,10 @@ void createLocalData(LocalData* & data) {
   (data->buf3)->outSeq = PETSC_NULL;
 
   data->buf4 = new VecBufType2;
-  (data->buf4)->rhsKspLow  = PETSC_NULL;
-  (data->buf4)->rhsKspHigh = PETSC_NULL;
-  (data->buf4)->solKspLow  = PETSC_NULL;
-  (data->buf4)->solKspHigh = PETSC_NULL;
+  (data->buf4)->rhsKspL  = PETSC_NULL;
+  (data->buf4)->rhsKspH = PETSC_NULL;
+  (data->buf4)->solKspL  = PETSC_NULL;
+  (data->buf4)->solKspH = PETSC_NULL;
 
   data->buf5 = new VecBufType3;
   (data->buf5)->uL = PETSC_NULL;
@@ -103,28 +103,42 @@ void createLocalData(LocalData* & data) {
   (data->buf5)->vH = PETSC_NULL;
   (data->buf5)->wL = PETSC_NULL;
   (data->buf5)->wH = PETSC_NULL;
-  (data->buf5)->wSlow    = PETSC_NULL;
-  (data->buf5)->wShigh   = PETSC_NULL;
+  (data->buf5)->wSl    = PETSC_NULL;
+  (data->buf5)->wSh   = PETSC_NULL;
   (data->buf5)->uStarL   = PETSC_NULL;
   (data->buf5)->uStarH   = PETSC_NULL;
-  (data->buf5)->uSinCopyHigh = PETSC_NULL;
+  (data->buf5)->uSinCopy = PETSC_NULL;
 
   data->buf6 = new VecBufType4;
-  (data->buf6)->uSoutLow = PETSC_NULL;
-  (data->buf6)->uSlow = PETSC_NULL;
-  (data->buf6)->uShigh = PETSC_NULL;
-  (data->buf6)->wSlow  = PETSC_NULL;
-  (data->buf6)->wShigh = PETSC_NULL;
+  (data->buf6)->uSout = PETSC_NULL;
+  (data->buf6)->uSl = PETSC_NULL;
+  (data->buf6)->uSh = PETSC_NULL;
+  (data->buf6)->wSl  = PETSC_NULL;
+  (data->buf6)->wSh = PETSC_NULL;
   (data->buf6)->uL     = PETSC_NULL;
   (data->buf6)->uH     = PETSC_NULL;
-  (data->buf6)->bSlow  = PETSC_NULL;
-  (data->buf6)->bShigh = PETSC_NULL;
-  (data->buf6)->ySlow  = PETSC_NULL;
-  (data->buf6)->yShigh = PETSC_NULL;
+  (data->buf6)->bSl  = PETSC_NULL;
+  (data->buf6)->bSh = PETSC_NULL;
+  (data->buf6)->ySl  = PETSC_NULL;
+  (data->buf6)->ySh = PETSC_NULL;
   (data->buf6)->cL     = PETSC_NULL;
   (data->buf6)->cH     = PETSC_NULL;
-  (data->buf6)->cOlow  = PETSC_NULL;
-  (data->buf6)->cOhigh = PETSC_NULL;
+  (data->buf6)->cOl  = PETSC_NULL;
+  (data->buf6)->cOh = PETSC_NULL;
+
+  data->buf7 = new VecBufType5;
+  (data->buf7)->fStarHigh = PETSC_NULL;
+  (data->buf7)->gS = PETSC_NULL;
+  (data->buf7)->fTmpL = PETSC_NULL;
+  (data->buf7)->fTmpH = PETSC_NULL;
+  (data->buf7)->fL = PETSC_NULL;
+  (data->buf7)->fH = PETSC_NULL;
+  (data->buf7)->fStarL = PETSC_NULL;
+  (data->buf7)->fStarH = PETSC_NULL;
+  (data->buf7)->uSl = PETSC_NULL;
+  (data->buf7)->uSh = PETSC_NULL;
+  (data->buf7)->gL = PETSC_NULL;
+  (data->buf7)->gH = PETSC_NULL;
 
   data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
@@ -170,17 +184,17 @@ void destroyLocalData(LocalData* data) {
   }
   delete (data->buf3);
 
-  if((data->buf4)->rhsKspLow) {
-    VecDestroy((data->buf4)->rhsKspLow);
+  if((data->buf4)->rhsKspL) {
+    VecDestroy((data->buf4)->rhsKspL);
   }
-  if((data->buf4)->rhsKspHigh) {
-    VecDestroy((data->buf4)->rhsKspHigh);
+  if((data->buf4)->rhsKspH) {
+    VecDestroy((data->buf4)->rhsKspH);
   }
-  if((data->buf4)->solKspLow) {
-    VecDestroy((data->buf4)->solKspLow);
+  if((data->buf4)->solKspL) {
+    VecDestroy((data->buf4)->solKspL);
   }
-  if((data->buf4)->solKspHigh) {
-    VecDestroy((data->buf4)->solKspHigh);
+  if((data->buf4)->solKspH) {
+    VecDestroy((data->buf4)->solKspH);
   }
   delete (data->buf4);
 
@@ -202,11 +216,11 @@ void destroyLocalData(LocalData* data) {
   if((data->buf5)->wH) {
     VecDestroy((data->buf5)->wH);
   }
-  if((data->buf5)->wSlow) {
-    VecDestroy((data->buf5)->wSlow);
+  if((data->buf5)->wSl) {
+    VecDestroy((data->buf5)->wSl);
   }
-  if((data->buf5)->wShigh) {
-    VecDestroy((data->buf5)->wShigh);
+  if((data->buf5)->wSh) {
+    VecDestroy((data->buf5)->wSh);
   }
   if((data->buf5)->uStarL) {
     VecDestroy((data->buf5)->uStarL);
@@ -214,25 +228,25 @@ void destroyLocalData(LocalData* data) {
   if((data->buf5)->uStarH) {
     VecDestroy((data->buf5)->uStarH);
   }
-  if((data->buf5)->uSinCopyHigh) {
-    VecDestroy((data->buf5)->uSinCopyHigh);
+  if((data->buf5)->uSinCopy) {
+    VecDestroy((data->buf5)->uSinCopy);
   }
   delete (data->buf5);
 
-  if((data->buf6)->uSoutLow) {
-    VecDestroy((data->buf6)->uSoutLow);
+  if((data->buf6)->uSout) {
+    VecDestroy((data->buf6)->uSout);
   }
-  if((data->buf6)->uSlow) {
-    VecDestroy((data->buf6)->uSlow);
+  if((data->buf6)->uSl) {
+    VecDestroy((data->buf6)->uSl);
   }
-  if((data->buf6)->uShigh) {
-    VecDestroy((data->buf6)->uShigh);
+  if((data->buf6)->uSh) {
+    VecDestroy((data->buf6)->uSh);
   }
-  if((data->buf6)->wSlow) {
-    VecDestroy((data->buf6)->wSlow);
+  if((data->buf6)->wSl) {
+    VecDestroy((data->buf6)->wSl);
   }
-  if((data->buf6)->wShigh) {
-    VecDestroy((data->buf6)->wShigh);
+  if((data->buf6)->wSh) {
+    VecDestroy((data->buf6)->wSh);
   }
   if((data->buf6)->uL) {
     VecDestroy((data->buf6)->uL);
@@ -240,17 +254,17 @@ void destroyLocalData(LocalData* data) {
   if((data->buf6)->uH) {
     VecDestroy((data->buf6)->uH);
   }
-  if((data->buf6)->bSlow) {
-    VecDestroy((data->buf6)->bSlow);
+  if((data->buf6)->bSl) {
+    VecDestroy((data->buf6)->bSl);
   }
-  if((data->buf6)->bShigh) {
-    VecDestroy((data->buf6)->bShigh);
+  if((data->buf6)->bSh) {
+    VecDestroy((data->buf6)->bSh);
   }
-  if((data->buf6)->ySlow) {
-    VecDestroy((data->buf6)->ySlow);
+  if((data->buf6)->ySl) {
+    VecDestroy((data->buf6)->ySl);
   }
-  if((data->buf6)->yShigh) {
-    VecDestroy((data->buf6)->yShigh);
+  if((data->buf6)->ySh) {
+    VecDestroy((data->buf6)->ySh);
   }
   if((data->buf6)->cL) {
     VecDestroy((data->buf6)->cL);
@@ -258,13 +272,51 @@ void destroyLocalData(LocalData* data) {
   if((data->buf6)->cH) {
     VecDestroy((data->buf6)->cH);
   }
-  if((data->buf6)->cOlow) {
-    VecDestroy((data->buf6)->cOlow);
+  if((data->buf6)->cOl) {
+    VecDestroy((data->buf6)->cOl);
   }
-  if((data->buf6)->cOhigh) {
-    VecDestroy((data->buf6)->cOhigh);
+  if((data->buf6)->cOh) {
+    VecDestroy((data->buf6)->cOh);
   }
   delete (data->buf6);
+
+  if((data->buf7)->fStarHigh) {
+    VecDestroy((data->buf7)->fStarHigh);
+  }
+  if((data->buf7)->gS) {
+    VecDestroy((data->buf7)->gS);
+  }
+  if((data->buf7)->fTmpL) {
+    VecDestroy((data->buf7)->fTmpL);
+  }
+  if((data->buf7)->fTmpH) {
+    VecDestroy((data->buf7)->fTmpH);
+  }
+  if((data->buf7)->fL) {
+    VecDestroy((data->buf7)->fL);
+  }
+  if((data->buf7)->fH) {
+    VecDestroy((data->buf7)->fH);
+  }
+  if((data->buf7)->fStarL) {
+    VecDestroy((data->buf7)->fStarL);
+  }
+  if((data->buf7)->fStarH) {
+    VecDestroy((data->buf7)->fStarH);
+  }
+  if((data->buf7)->uSl) {
+    VecDestroy((data->buf7)->uSl);
+  }
+  if((data->buf7)->uSh) {
+    VecDestroy((data->buf7)->uSh);
+  }
+  if((data->buf7)->gL) {
+    VecDestroy((data->buf7)->gL);
+  }
+  if((data->buf7)->gH) {
+    VecDestroy((data->buf7)->gH);
+  }
+  delete (data->buf7);
 
   if(data->lowSchurKsp) {
     KSPDestroy(data->lowSchurKsp);
