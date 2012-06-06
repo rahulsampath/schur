@@ -6,6 +6,36 @@
 extern double** stencil;
 extern int DOFS_PER_NODE;
 
+void createConvectionDiffusionStencil() {
+  int N = 9;
+  double Pe = 10e6;
+  PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
+  const double h = 1.0/(static_cast<double>(N));
+  DOFS_PER_NODE = 1;
+  const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
+  typedef double* doublePtr;
+  stencil = new doublePtr[4];
+  for(int j = 0; j < 4; ++j) {
+    stencil[j] = new double[4];
+    for(int k = 0; k < 4; ++k) {
+      stencil[j][k] = 0.0;
+    }//end k
+  }//end j
+
+  for(int j = 0; j < 4; ++j) {
+    for(int i = 0; i < 4; ++i) {
+      for(int n = 0; n < 2; ++n) {
+        double eta = gaussPts[n];
+        for(int m = 0; m < 2; ++m) {
+          double psi = gaussPts[m];
+          stencil[j][i] += dPhidPsi(j, eta)*Phi(i, psi, eta) + dPhidEta(j, psi)*Phi(i, psi, eta) + Pe * (dPhidPsi(j, eta) + dPhidEta(j, psi)) * dPhidPsi(i, eta) 
+                            + Pe * (dPhidPsi(j, eta) + dPhidEta(j, psi)) * dPhidEta(i, psi); 
+        }//end m
+      }//end n
+    }//end i
+  }//end j
+}
+
 void createHardStencilType1() {
   const double epsilon = 0.01;
   const double kappa = 0.01;
@@ -76,11 +106,13 @@ void createPoissonStencil() {
   stencil = new doublePtr[4];
   for(int j = 0; j < 4; ++j) {
     stencil[j] = new double[4];
+    for(int k = 0; k < 4; ++k) {
+      stencil[j][k] = 0.0;
+    }//end k
   }//end j
 
   for(int j = 0; j < 4; ++j) {
     for(int i = 0; i < 4; ++i) {
-      stencil[j][i] = 0.0;
       for(int n = 0; n < 2; ++n) {
         double eta = gaussPts[n];
         for(int m = 0; m < 2; ++m) {
