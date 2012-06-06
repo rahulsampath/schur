@@ -107,7 +107,24 @@ void createLocalData(LocalData* & data) {
   (data->buf5)->wShigh   = PETSC_NULL;
   (data->buf5)->uStarL   = PETSC_NULL;
   (data->buf5)->uStarH   = PETSC_NULL;
-  (data->buf5)->uSinCopy = PETSC_NULL;
+  (data->buf5)->uSinCopyHigh = PETSC_NULL;
+
+  data->buf6 = new VecBufType4;
+  (data->buf6)->uSoutLow = PETSC_NULL;
+  (data->buf6)->uSlow = PETSC_NULL;
+  (data->buf6)->uShigh = PETSC_NULL;
+  (data->buf6)->wSlow  = PETSC_NULL;
+  (data->buf6)->wShigh = PETSC_NULL;
+  (data->buf6)->uL     = PETSC_NULL;
+  (data->buf6)->uH     = PETSC_NULL;
+  (data->buf6)->bSlow  = PETSC_NULL;
+  (data->buf6)->bShigh = PETSC_NULL;
+  (data->buf6)->ySlow  = PETSC_NULL;
+  (data->buf6)->yShigh = PETSC_NULL;
+  (data->buf6)->cL     = PETSC_NULL;
+  (data->buf6)->cH     = PETSC_NULL;
+  (data->buf6)->cOlow  = PETSC_NULL;
+  (data->buf6)->cOhigh = PETSC_NULL;
 
   data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
@@ -197,10 +214,57 @@ void destroyLocalData(LocalData* data) {
   if((data->buf5)->uStarH) {
     VecDestroy((data->buf5)->uStarH);
   }
-  if((data->buf5)->uSinCopy) {
-    VecDestroy((data->buf5)->uSinCopy);
+  if((data->buf5)->uSinCopyHigh) {
+    VecDestroy((data->buf5)->uSinCopyHigh);
   }
   delete (data->buf5);
+
+  if((data->buf6)->uSoutLow) {
+    VecDestroy((data->buf6)->uSoutLow);
+  }
+  if((data->buf6)->uSlow) {
+    VecDestroy((data->buf6)->uSlow);
+  }
+  if((data->buf6)->uShigh) {
+    VecDestroy((data->buf6)->uShigh);
+  }
+  if((data->buf6)->wSlow) {
+    VecDestroy((data->buf6)->wSlow);
+  }
+  if((data->buf6)->wShigh) {
+    VecDestroy((data->buf6)->wShigh);
+  }
+  if((data->buf6)->uL) {
+    VecDestroy((data->buf6)->uL);
+  }
+  if((data->buf6)->uH) {
+    VecDestroy((data->buf6)->uH);
+  }
+  if((data->buf6)->bSlow) {
+    VecDestroy((data->buf6)->bSlow);
+  }
+  if((data->buf6)->bShigh) {
+    VecDestroy((data->buf6)->bShigh);
+  }
+  if((data->buf6)->ySlow) {
+    VecDestroy((data->buf6)->ySlow);
+  }
+  if((data->buf6)->yShigh) {
+    VecDestroy((data->buf6)->yShigh);
+  }
+  if((data->buf6)->cL) {
+    VecDestroy((data->buf6)->cL);
+  }
+  if((data->buf6)->cH) {
+    VecDestroy((data->buf6)->cH);
+  }
+  if((data->buf6)->cOlow) {
+    VecDestroy((data->buf6)->cOlow);
+  }
+  if((data->buf6)->cOhigh) {
+    VecDestroy((data->buf6)->cOhigh);
+  }
+  delete (data->buf6);
 
   if(data->lowSchurKsp) {
     KSPDestroy(data->lowSchurKsp);

@@ -38,7 +38,25 @@ struct VecBufType3 {
   Vec wShigh;
   Vec uStarL;
   Vec uStarH;
-  Vec uSinCopy;
+  Vec uSinCopyHigh;
+};
+
+struct VecBufType4 {
+  Vec uSoutLow;
+  Vec uSlow;
+  Vec uShigh;
+  Vec wSlow;
+  Vec wShigh;
+  Vec uL;
+  Vec uH;
+  Vec bSlow;
+  Vec bShigh;
+  Vec ySlow;
+  Vec yShigh;
+  Vec cL;
+  Vec cH;
+  Vec cOlow;
+  Vec cOhigh;
 };
 
 struct LocalData {
@@ -57,6 +75,7 @@ struct LocalData {
   VecBufType1* buf3; 
   VecBufType2* buf4;
   VecBufType3* buf5;
+  VecBufType4* buf6;
 };
 
 struct OuterContext {
