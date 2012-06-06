@@ -143,10 +143,17 @@ PetscErrorCode outerPCapply(void* ptr, Vec in, Vec out) {
 }
 
 void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
+  VecBufType5* buf = data->buf7;
+
   if(root->child) {
     if(root->rankForCurrLevel == (((root->npesForCurrLevel)/2) - 1)) {
       Vec fStarHigh;
-      MatGetVecs(data->Ksl, PETSC_NULL, &fStarHigh);
+      if(buf->fStarHigh) {
+        fStarHigh = buf->fStarHigh;
+      } else {
+        MatGetVecs(data->Ksl, PETSC_NULL, &fStarHigh);
+        buf->fStarHigh = fStarHigh;
+      }
 
       PetscScalar* recvArr7;
       VecGetArray(fStarHigh, &recvArr7);
@@ -158,17 +165,46 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MPI_Irecv(recvArr7, Ssize, MPI_DOUBLE, 1, 7, data->commLow, &recvRequest7);
 
       Vec fTmp;
-      VecDuplicate(u, &fTmp);
+      if(buf->fTmpL) {
+        fTmp = buf->fTmpL;
+      } else {
+        VecDuplicate(u, &fTmp);
+        buf->fTmpL = fTmp;
+      }
 
       RSDapplyInverse(data, root->child, f, fTmp);
 
       Vec fL;
-      MatGetVecs(data->Ksl, &fL, PETSC_NULL);
+      if(buf->fL) {
+        fL = buf->fL;
+      } else {
+        MatGetVecs(data->Ksl, &fL, PETSC_NULL);
+        buf->fL = fL;
+      }
 
-      Vec fStar, gS, uS; 
-      VecDuplicate(fStarHigh, &fStar);
-      VecDuplicate(fStar, &gS);
-      VecDuplicate(fStar, &uS);
+      Vec fStar;
+      if(buf->fStarL) {
+        fStar = buf->fStarL;
+      } else {
+        VecDuplicate(fStarHigh, &fStar);
+        buf->fStarL = fStar;
+      }
+
+      Vec gS; 
+      if(buf->gS) {
+        gS = buf->gS;
+      } else {
+        VecDuplicate(fStar, &gS);
+        buf->gS = gS;
+      }
+
+      Vec uS; 
+      if(buf->uSl) {
+        uS = buf->uSl;
+      } else {
+        VecDuplicate(fStar, &uS);
+        buf->uSl = uS;
+      }
 
       map<O, L>(data, fTmp, fL);
 
@@ -192,7 +228,12 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MPI_Isend(sendArr8, Ssize, MPI_DOUBLE, 1, 8, data->commLow, &sendRequest8);
 
       Vec gL;
-      VecDuplicate(fL, &gL);
+      if(buf->gL) {
+        gL = buf->gL;
+      } else {
+        VecDuplicate(fL, &gL);
+        buf->gL = gL;
+      }
 
       MatMult(data->Kls, uS, gL);
 
@@ -212,22 +253,18 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
 
       map<S, O>(data, uS, u);
 
-      VecDestroy(gL);
-      VecDestroy(fTmp);
-      VecDestroy(fL);
-      VecDestroy(fStar);
-      VecDestroy(fStarHigh);
-      VecDestroy(gS);
-
       MPI_Status sendStatus8;
       MPI_Wait(&sendRequest8, &sendStatus8);
 
       VecRestoreArray(uS, &sendArr8);
-
-      VecDestroy(uS);
     } else if(root->rankForCurrLevel == ((root->npesForCurrLevel)/2)) {
       Vec uS; 
-      MatGetVecs(data->Ksh, PETSC_NULL, &uS);
+      if(buf->uSh) {
+        uS = buf->uSh;
+      } else {
+        MatGetVecs(data->Ksh, PETSC_NULL, &uS);
+        buf->uSh = uS;
+      }
 
       PetscInt Ssize;
       VecGetSize(uS, &Ssize);
@@ -239,17 +276,32 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MPI_Irecv(recvArr8, Ssize, MPI_DOUBLE, 0, 8, data->commHigh, &recvRequest8);
 
       Vec fTmp;
-      VecDuplicate(u, &fTmp);
+      if(buf->fTmpH) {
+        fTmp = buf->fTmpH;
+      } else {
+        VecDuplicate(u, &fTmp);
+        buf->fTmpH = fTmp;
+      }
 
       RSDapplyInverse(data, root->child, f, fTmp);
 
       Vec fH; 
-      MatGetVecs(data->Ksh, &fH, PETSC_NULL);
+      if(buf->fH) {
+        fH = buf->fH;
+      } else {
+        MatGetVecs(data->Ksh, &fH, PETSC_NULL);
+        buf->fH = fH;
+      }
 
       map<O, H>(data, fTmp, fH);
 
       Vec fStar;
-      VecDuplicate(uS, &fStar);
+      if(buf->fStarH) {
+        fStar = buf->fStarH;
+      } else {
+        VecDuplicate(uS, &fStar);
+        buf->fStarH = fStar;
+      }
 
       MatMult(data->Ksh, fH, fStar);
 
@@ -262,7 +314,12 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       schurSolve(data, false, PETSC_NULL, PETSC_NULL);
 
       Vec gH;
-      VecDuplicate(fH, &gH);
+      if(buf->gH) {
+        gH = buf->gH;
+      } else {
+        VecDuplicate(fH, &gH);
+        buf->gH = gH;
+      }
 
       Vec gRhs = DMMGGetRHS(data->mgObj);
       Vec gSol = DMMGGetx(data->mgObj);
@@ -285,17 +342,10 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       VecScale(u, -1.0);
       VecAXPY(u, 1.0, fTmp);
 
-      VecDestroy(gH);
-      VecDestroy(fTmp);
-      VecDestroy(fH);
-      VecDestroy(uS);
-
       MPI_Status sendStatus7;
       MPI_Wait(&sendRequest7, &sendStatus7);
 
       VecRestoreArray(fStar, &sendArr7);
-
-      VecDestroy(fStar);
     } else {
       RSDapplyInverse(data, root->child, f, u);
     }
@@ -319,11 +369,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
   if(root->child) {
     if(root->rankForCurrLevel == (((root->npesForCurrLevel)/2) - 1)) {
       Vec uSout;
-      if(buf->uSoutLow) {
-        uSout = buf->uSoutLow;
+      if(buf->uSout) {
+        uSout = buf->uSout;
       } else {
         MatGetVecs(data->Kssl, &uSout, PETSC_NULL);
-        buf->uSoutLow = uSout;
+        buf->uSout = uSout;
       }
 
       PetscInt Ssize;
@@ -336,11 +386,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       MPI_Irecv(recvArr6, Ssize, MPI_DOUBLE, 1, 6, data->commLow, &recvRequest6);
 
       Vec uS;
-      if(buf->uSlow) {
-        uS = buf->uSlow;
+      if(buf->uSl) {
+        uS = buf->uSl;
       } else {
         VecDuplicate(uSout, &uS);
-        buf->uSlow = uS;
+        buf->uSl = uS;
       }
 
       map<O, S>(data, uIn, uS);
@@ -354,11 +404,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       KmatVec(data, root->child, uIn, uOut);
 
       Vec wS;
-      if(buf->wSlow) {
-        wS = buf->wSlow;
+      if(buf->wSl) {
+        wS = buf->wSl;
       } else {
         VecDuplicate(uS, &wS);
-        buf->wSlow = wS;
+        buf->wSl = wS;
       }
 
       MatMult(data->Kssl, uS, wS);
@@ -372,11 +422,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       }
 
       Vec bS;
-      if(buf->bSlow) {
-        bS = buf->bSlow;
+      if(buf->bSl) {
+        bS = buf->bSl;
       } else {
         MatGetVecs(data->Ksl, PETSC_NULL, &bS);
-        buf->bSlow = bS;
+        buf->bSl = bS;
       }
 
       map<O, L>(data, uIn, uL);
@@ -384,11 +434,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       MatMult(data->Ksl, uL, bS);
 
       Vec yS;
-      if(buf->ySlow) {
-        yS = buf->ySlow;
+      if(buf->ySl) {
+        yS = buf->ySl;
       } else {
         VecDuplicate(bS, &yS); 
-        buf->ySlow = yS;
+        buf->ySl = yS;
       }
 
       VecWAXPY(yS, 1.0, wS, bS);
@@ -404,11 +454,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       MatMult(data->Kls, uS, cL);
 
       Vec cO;
-      if(buf->cOlow) {
-        cO = buf->cOlow;
+      if(buf->cOl) {
+        cO = buf->cOl;
       } else {
         VecDuplicate(uOut, &cO);
-        buf->cOlow = cO;
+        buf->cOl = cO;
       }
 
       VecZeroEntries(cO);
@@ -431,11 +481,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       VecRestoreArray(uS, &sendArr5);
     } else if(root->rankForCurrLevel == ((root->npesForCurrLevel)/2)) {
       Vec uS;
-      if(buf->uShigh) {
-        uS = buf->uShigh;
+      if(buf->uSh) {
+        uS = buf->uSh;
       } else {
         MatGetVecs(data->Kssh, &uS, PETSC_NULL);
-        buf->uShigh = uS;
+        buf->uSh = uS;
       }
 
       PetscInt Ssize;
@@ -450,11 +500,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       KmatVec(data, root->child, uIn, uOut);
 
       Vec wS;
-      if(buf->wShigh) {
-        wS = buf->wShigh;
+      if(buf->wSh) {
+        wS = buf->wSh;
       } else {
         VecDuplicate(uS, &wS);
-        buf->wShigh = wS;
+        buf->wSh = wS;
       }
 
       Vec uH;
@@ -466,11 +516,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       }
 
       Vec bS; 
-      if(buf->bShigh) {
-        bS = buf->bShigh;
+      if(buf->bSh) {
+        bS = buf->bSh;
       } else {
         MatGetVecs(data->Ksh, PETSC_NULL, &bS);
-        buf->bShigh = bS;
+        buf->bSh = bS;
       }
 
       Vec cH; 
@@ -482,11 +532,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       }
 
       Vec yS;
-      if(buf->yShigh) {
-        yS = buf->yShigh;
+      if(buf->ySh) {
+        yS = buf->ySh;
       } else {
         VecDuplicate(bS, &yS); 
-        buf->yShigh = yS;
+        buf->ySh = yS;
       }
 
       map<O, H>(data, uIn, uH);
@@ -494,11 +544,11 @@ void KmatVec(LocalData* data, RSDnode* root, Vec uIn, Vec uOut) {
       MatMult(data->Ksh, uH, bS);
 
       Vec cO;
-      if(buf->cOhigh) {
-        cO = buf->cOhigh;
+      if(buf->cOh) {
+        cO = buf->cOh;
       } else {
         VecDuplicate(uOut, &cO);
-        buf->cOhigh = cO;
+        buf->cOh = cO;
       }
 
       VecZeroEntries(cO);
@@ -601,11 +651,11 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     }
 
     Vec wS;
-    if(buf->wSlow) {
-      wS = buf->wSlow;
+    if(buf->wSl) {
+      wS = buf->wSl;
     } else {
       MatGetVecs(data->Ksl, PETSC_NULL, &wS);
-      buf->wSlow = wS;
+      buf->wSl = wS;
     }
 
     map<MG, L>(data, solMg, wL);
@@ -635,11 +685,11 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     VecRestoreArray(uSin, &sendArr3);
   } else {
     Vec uSinCopy;
-    if(buf->uSinCopyHigh) {
-      uSinCopy = buf->uSinCopyHigh;
+    if(buf->uSinCopy) {
+      uSinCopy = buf->uSinCopy;
     } else {
       MatGetVecs(data->Kssh, &uSinCopy, PETSC_NULL);
-      buf->uSinCopyHigh = uSinCopy;
+      buf->uSinCopy = uSinCopy;
     }
 
     PetscInt Ssize;
@@ -676,11 +726,11 @@ void schurMatVec(LocalData* data, bool isLow, Vec uSin, Vec uSout) {
     }
 
     Vec wS;
-    if(buf->wShigh) {
-      wS = buf->wShigh;
+    if(buf->wSh) {
+      wS = buf->wSh;
     } else {
       MatGetVecs(data->Ksh, PETSC_NULL, &wS);
-      buf->wShigh = wS;
+      buf->wSh = wS;
     }
 
     Vec uStarH;
@@ -733,32 +783,32 @@ void schurSolve(LocalData* data, bool isLow, Vec rhs, Vec sol) {
 
   Vec rhsKsp, solKsp;
   if(isLow) {
-    if(buf->rhsKspLow) {
-      rhsKsp = buf->rhsKspLow;
+    if(buf->rhsKspL) {
+      rhsKsp = buf->rhsKspL;
     } else {
       PetscInt localSize;
       VecGetLocalSize(rhs, &localSize);
       VecCreateMPI(data->commLow, localSize, PETSC_DETERMINE, &rhsKsp);
-      buf->rhsKspLow = rhsKsp;
+      buf->rhsKspL = rhsKsp;
     }
-    if(buf->solKspLow) {
-      solKsp = buf->solKspLow;
+    if(buf->solKspL) {
+      solKsp = buf->solKspL;
     } else {
       VecDuplicate(rhsKsp, &solKsp);
-      buf->solKspLow = solKsp;
+      buf->solKspL = solKsp;
     }
   } else {
-    if(buf->rhsKspHigh) {
-      rhsKsp = buf->rhsKspHigh;
+    if(buf->rhsKspH) {
+      rhsKsp = buf->rhsKspH;
     } else {
       VecCreateMPI(data->commHigh, 0, PETSC_DETERMINE, &rhsKsp);
-      buf->rhsKspHigh = rhsKsp;
+      buf->rhsKspH = rhsKsp;
     }
-    if(buf->solKspHigh) {
-      solKsp = buf->solKspHigh;
+    if(buf->solKspH) {
+      solKsp = buf->solKspH;
     } else {
       VecDuplicate(rhsKsp, &solKsp);
-      buf->solKspHigh = solKsp;
+      buf->solKspH = solKsp;
     }
   }
 
