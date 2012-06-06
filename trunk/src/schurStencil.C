@@ -21,8 +21,8 @@ void createLinearElasticMechanicsStencil() {
     }//end k
   }//end j
 
-  double mu = 75.e+9;
-  double lambda = 113e+9;
+  double mu = 1.0;
+  double lambda = 4.0;
 
   for(int j = 0; j < 4; ++j) {
     for(int i = 0; i < 4; ++i) {
@@ -35,7 +35,7 @@ void createLinearElasticMechanicsStencil() {
             int dj = 0;
             int di = 0;
             stencil[(j*2) + dj][(i*2) + di] += mu *( (dPhidPsi(i, eta)*dPhidPsi(j, eta)) + (dPhidEta(i, psi)*dPhidEta(j, psi)) )
-                                               + (lambda + mu) * (dPhidPsi(i, eta)*dPhidPsi(j, eta))   ;
+              + (lambda + mu) * (dPhidPsi(i, eta)*dPhidPsi(j, eta))   ;
           }
           //f2
           {
@@ -54,7 +54,7 @@ void createLinearElasticMechanicsStencil() {
             int dj = 1;
             int di = 1;
             stencil[(j*2) + dj][(i*2) + di] += mu *( (dPhidPsi(i, eta)*dPhidPsi(j, eta)) + (dPhidEta(i, psi)*dPhidEta(j, psi)) )
-                                               + (lambda + mu) * (dPhidPsi(i, eta)*dPhidPsi(j, eta))   ;
+              + (lambda + mu) * (dPhidPsi(i, eta)*dPhidPsi(j, eta))   ;
           }
         }//end m
       }//end n
@@ -84,7 +84,7 @@ void createConvectionDiffusionStencil() {
         double eta = gaussPts[n];
         for(int m = 0; m < 2; ++m) {
           double psi = gaussPts[m];
-          stencil[j][i] += ( ((h/2.0)*( (dPhidPsi(j, eta)*Phi(i, psi, eta)) + (dPhidEta(j, psi)*Phi(i, psi, eta)) )) +
+          stencil[j][i] += ( ((h/2.0)*( (dPhidPsi(i, eta)*Phi(j, psi, eta)) + (dPhidEta(i, psi)*Phi(j, psi, eta)) )) +
               (PeInv*( ( (dPhidPsi(j, eta) + dPhidEta(j, psi))*dPhidPsi(i, eta) ) + 
                        ( (dPhidPsi(j, eta) + dPhidEta(j, psi))*dPhidEta(i, psi) ) ) ) ); 
         }//end m
