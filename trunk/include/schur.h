@@ -21,10 +21,10 @@ struct VecBufType1 {
 };
 
 struct VecBufType2 {
-  Vec rhsKspLow;
-  Vec rhsKspHigh;
-  Vec solKspLow;
-  Vec solKspHigh;
+  Vec rhsKspL;
+  Vec rhsKspH;
+  Vec solKspL;
+  Vec solKspH;
 };
 
 struct VecBufType3 {
@@ -34,29 +34,44 @@ struct VecBufType3 {
   Vec vH;
   Vec wL;
   Vec wH;
-  Vec wSlow;
-  Vec wShigh;
+  Vec wSl;
+  Vec wSh;
   Vec uStarL;
   Vec uStarH;
-  Vec uSinCopyHigh;
+  Vec uSinCopy;
 };
 
 struct VecBufType4 {
-  Vec uSoutLow;
-  Vec uSlow;
-  Vec uShigh;
-  Vec wSlow;
-  Vec wShigh;
+  Vec uSout;
+  Vec uSl;
+  Vec uSh;
+  Vec wSl;
+  Vec wSh;
   Vec uL;
   Vec uH;
-  Vec bSlow;
-  Vec bShigh;
-  Vec ySlow;
-  Vec yShigh;
+  Vec bSl;
+  Vec bSh;
+  Vec ySl;
+  Vec ySh;
   Vec cL;
   Vec cH;
-  Vec cOlow;
-  Vec cOhigh;
+  Vec cOl;
+  Vec cOh;
+};
+
+struct VecBufType5 {
+  Vec fStarHigh;
+  Vec gS;
+  Vec fTmpL;
+  Vec fTmpH;
+  Vec fL;
+  Vec fH;
+  Vec fStarL;
+  Vec fStarH;
+  Vec uSl;
+  Vec uSh;
+  Vec gL;
+  Vec gH;
 };
 
 struct LocalData {
@@ -76,6 +91,7 @@ struct LocalData {
   VecBufType2* buf4;
   VecBufType3* buf5;
   VecBufType4* buf6;
+  VecBufType5* buf7;
 };
 
 struct OuterContext {
