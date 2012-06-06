@@ -28,6 +28,17 @@ struct VecBufType2 {
 };
 
 struct VecBufType3 {
+  Vec uL;
+  Vec uH;
+  Vec vL;
+  Vec vH;
+  Vec wL;
+  Vec wH;
+  Vec wSlow;
+  Vec wShigh;
+  Vec uStarL;
+  Vec uStarH;
+  Vec uSinCopy;
 };
 
 struct LocalData {

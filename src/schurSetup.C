@@ -79,24 +79,35 @@ void createLocalData(LocalData* & data) {
   data->mgObj = PETSC_NULL;
 
   data->buf1 = new VecBufType1;
-  (data->buf1)->inSeq = PETSC_NULL;
+  (data->buf1)->inSeq  = PETSC_NULL;
   (data->buf1)->outSeq = PETSC_NULL;
 
   data->buf2 = new VecBufType1;
-  (data->buf2)->inSeq = PETSC_NULL;
+  (data->buf2)->inSeq  = PETSC_NULL;
   (data->buf2)->outSeq = PETSC_NULL;
 
   data->buf3 = new VecBufType1;
-  (data->buf3)->inSeq = PETSC_NULL;
+  (data->buf3)->inSeq  = PETSC_NULL;
   (data->buf3)->outSeq = PETSC_NULL;
 
   data->buf4 = new VecBufType2;
-  (data->buf4)->rhsKspLow = PETSC_NULL;
+  (data->buf4)->rhsKspLow  = PETSC_NULL;
   (data->buf4)->rhsKspHigh = PETSC_NULL;
-  (data->buf4)->solKspLow = PETSC_NULL;
+  (data->buf4)->solKspLow  = PETSC_NULL;
   (data->buf4)->solKspHigh = PETSC_NULL;
 
   data->buf5 = new VecBufType3;
+  (data->buf5)->uL = PETSC_NULL;
+  (data->buf5)->uH = PETSC_NULL;
+  (data->buf5)->vL = PETSC_NULL;
+  (data->buf5)->vH = PETSC_NULL;
+  (data->buf5)->wL = PETSC_NULL;
+  (data->buf5)->wH = PETSC_NULL;
+  (data->buf5)->wSlow    = PETSC_NULL;
+  (data->buf5)->wShigh   = PETSC_NULL;
+  (data->buf5)->uStarL   = PETSC_NULL;
+  (data->buf5)->uStarH   = PETSC_NULL;
+  (data->buf5)->uSinCopy = PETSC_NULL;
 
   data->dofsPerNode = DOFS_PER_NODE;
   data->N = 9;
@@ -156,6 +167,39 @@ void destroyLocalData(LocalData* data) {
   }
   delete (data->buf4);
 
+  if((data->buf5)->uL) {
+    VecDestroy((data->buf5)->uL);
+  }
+  if((data->buf5)->uH) {
+    VecDestroy((data->buf5)->uH);
+  }
+  if((data->buf5)->vL) {
+    VecDestroy((data->buf5)->vL);
+  }
+  if((data->buf5)->vH) {
+    VecDestroy((data->buf5)->vH);
+  }
+  if((data->buf5)->wL) {
+    VecDestroy((data->buf5)->wL);
+  }
+  if((data->buf5)->wH) {
+    VecDestroy((data->buf5)->wH);
+  }
+  if((data->buf5)->wSlow) {
+    VecDestroy((data->buf5)->wSlow);
+  }
+  if((data->buf5)->wShigh) {
+    VecDestroy((data->buf5)->wShigh);
+  }
+  if((data->buf5)->uStarL) {
+    VecDestroy((data->buf5)->uStarL);
+  }
+  if((data->buf5)->uStarH) {
+    VecDestroy((data->buf5)->uStarH);
+  }
+  if((data->buf5)->uSinCopy) {
+    VecDestroy((data->buf5)->uSinCopy);
+  }
   delete (data->buf5);
 
   if(data->lowSchurKsp) {
