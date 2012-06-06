@@ -46,6 +46,8 @@ int main(int argc, char** argv) {
     createHardStencilType2();
   } else if(problem == 4) {
     createConvectionDiffusionStencil();
+  } else if(problem == 5) {
+    createLinearElasticMechanicsStencil();
   } else {
     assert(false);
   }
