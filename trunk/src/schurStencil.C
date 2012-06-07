@@ -61,7 +61,9 @@ void createLinearElasticMechanicsStencil() {
 
 void createConvectionDiffusionStencil() {
   int N = 9;
-  double PeInv = 1e-4;
+  double D = 1.0e-4;
+  double v1 = 1.0;
+  double v2 = 1.0;
   PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
   const double h = 1.0/(static_cast<double>(N - 1));
   DOFS_PER_NODE = 1;
@@ -81,9 +83,9 @@ void createConvectionDiffusionStencil() {
         double eta = gaussPts[n];
         for(int m = 0; m < 2; ++m) {
           double psi = gaussPts[m];
-          stencil[j][i] += ( ((h/2.0)*( (dPhidPsi(i, eta)*Phi(j, psi, eta)) + (dPhidEta(i, psi)*Phi(j, psi, eta)) )) +
-              (PeInv*( ( (dPhidPsi(j, eta) + dPhidEta(j, psi))*dPhidPsi(i, eta) ) + 
-                       ( (dPhidPsi(j, eta) + dPhidEta(j, psi))*dPhidEta(i, psi) ) ) ) ); 
+          stencil[j][i] += ( (D*((dPhidPsi(j, eta)*dPhidPsi(i, eta)) + (dPhidEta(j, psi)*dPhidEta(i, psi))))
+              - ((h/2.0)*((v1*dPhidPsi(j, eta)*Phi(i, psi, eta)) +
+                  (v2*dPhidEta(j, psi)*Phi(i, psi, eta)))) );
         }//end m
       }//end n
     }//end i
