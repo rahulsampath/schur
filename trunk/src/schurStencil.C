@@ -31,27 +31,27 @@ void createLinearElasticMechanicsStencil() {
           {
             int dj = 0;
             int di = 0;
-            stencil[(j*2) + dj][(i*2) + di] += mu *( (dPhidPsi(i, eta)*dPhidPsi(j, eta)) + (dPhidEta(i, psi)*dPhidEta(j, psi)) )
-              + (lambda + mu) * (dPhidPsi(i, eta)*dPhidPsi(j, eta))   ;
+            stencil[(j*2) + dj][(i*2) + di] += ( (mu*((dPhidPsi(j, eta)*dPhidPsi(i, eta)) + (dPhidEta(j, psi)*dPhidEta(i, psi))))
+                + ((lambda + mu)*(dPhidPsi(j, eta)*dPhidPsi(i, eta))) );
           }
           //f2
           {
             int dj = 0;
             int di = 1;
-            stencil[(j*2) + dj][(i*2) + di] += (lambda + mu) * (dPhidPsi(j, eta)*dPhidEta(i, psi));
+            stencil[(j*2) + dj][(i*2) + di] += ((lambda + mu)*(dPhidEta(j, psi)*dPhidPsi(i, eta)));
           }
           //f3
           {
             int dj = 1;
             int di = 0;
-            stencil[(j*2) + dj][(i*2) + di] += (lambda + mu) * (dPhidPsi(i, eta)*dPhidEta(j, psi));
+            stencil[(j*2) + dj][(i*2) + di] += ((lambda + mu)*(dPhidPsi(j, eta)*dPhidEta(i, psi)));
           }
           //f4
           {
             int dj = 1;
             int di = 1;
-            stencil[(j*2) + dj][(i*2) + di] += mu *( (dPhidPsi(i, eta)*dPhidPsi(j, eta)) + (dPhidEta(i, psi)*dPhidEta(j, psi)) )
-              + (lambda + mu) * (dPhidEta(i, psi)*dPhidEta(j, psi))   ;
+            stencil[(j*2) + dj][(i*2) + di] += ( (mu*((dPhidPsi(j, eta)*dPhidPsi(i, eta)) + (dPhidEta(j, psi)*dPhidEta(i, psi))))
+                + ((lambda + mu)*(dPhidEta(j, psi)*dPhidEta(i, psi))) );
           }
         }//end m
       }//end n
