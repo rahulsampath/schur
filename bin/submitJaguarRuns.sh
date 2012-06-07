@@ -1,11 +1,11 @@
 #!/bin/bash
-for P in 8 128 2048 32768
+for P in 8 128 2048
 do
   for N in 17 33 65 129
   do
-    for G in 1 2 4 8
+    for G in 2 4 8
     do
-      for C in 1 2 3
+      for C in 1 2 3 4 5
       do
         export S=`echo $[2*$P]`
         echo "#!/bin/bash" > myJob.pbs
