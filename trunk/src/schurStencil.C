@@ -22,7 +22,7 @@ void createLinearElasticMechanicsStencil() {
   }//end j
 
   double mu = 1.0;
-  double lambda = 4.0;
+  double lambda = 10.0;
 
   for(int j = 0; j < 4; ++j) {
     for(int i = 0; i < 4; ++i) {
