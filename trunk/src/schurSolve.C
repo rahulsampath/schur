@@ -147,19 +147,19 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
 
   if(root->child) {
     if(root->rankForCurrLevel == (((root->npesForCurrLevel)/2) - 1)) {
-      Vec fStarHigh;
-      if(buf->fStarHigh) {
-        fStarHigh = buf->fStarHigh;
+      Vec fStarHcopy;
+      if(buf->fStarHcopy) {
+        fStarHcopy = buf->fStarHcopy;
       } else {
-        MatGetVecs(data->Ksl, PETSC_NULL, &fStarHigh);
-        buf->fStarHigh = fStarHigh;
+        MatGetVecs(data->Ksl, PETSC_NULL, &fStarHcopy);
+        buf->fStarHcopy = fStarHcopy;
       }
 
       PetscScalar* recvArr7;
-      VecGetArray(fStarHigh, &recvArr7);
+      VecGetArray(fStarHcopy, &recvArr7);
 
       PetscInt Ssize;
-      VecGetSize(fStarHigh, &Ssize);
+      VecGetSize(fStarHcopy, &Ssize);
 
       MPI_Request recvRequest7;
       MPI_Irecv(recvArr7, Ssize, MPI_DOUBLE, 1, 7, data->commLow, &recvRequest7);
@@ -186,7 +186,7 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       if(buf->fStarL) {
         fStar = buf->fStarL;
       } else {
-        VecDuplicate(fStarHigh, &fStar);
+        VecDuplicate(fStarHcopy, &fStar);
         buf->fStarL = fStar;
       }
 
@@ -215,9 +215,9 @@ void RSDapplyInverse(LocalData* data, RSDnode* root, Vec f, Vec u) {
       MPI_Status recvStatus7;
       MPI_Wait(&recvRequest7, &recvStatus7);
 
-      VecRestoreArray(fStarHigh, &recvArr7);
+      VecRestoreArray(fStarHcopy, &recvArr7);
 
-      VecAXPBYPCZ(gS, -1.0, -1.0, 1.0, fStar, fStarHigh);
+      VecAXPBYPCZ(gS, -1.0, -1.0, 1.0, fStar, fStarHcopy);
 
       schurSolve(data, true, gS, uS);
 

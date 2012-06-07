@@ -60,7 +60,7 @@ struct VecBufType4 {
 };
 
 struct VecBufType5 {
-  Vec fStarHigh;
+  Vec fStarHcopy;
   Vec gS;
   Vec fTmpL;
   Vec fTmpH;
