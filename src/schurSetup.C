@@ -127,7 +127,7 @@ void createLocalData(LocalData* & data) {
   (data->buf6)->cOh = PETSC_NULL;
 
   data->buf7 = new VecBufType5;
-  (data->buf7)->fStarHigh = PETSC_NULL;
+  (data->buf7)->fStarHcopy = PETSC_NULL;
   (data->buf7)->gS = PETSC_NULL;
   (data->buf7)->fTmpL = PETSC_NULL;
   (data->buf7)->fTmpH = PETSC_NULL;
@@ -280,8 +280,8 @@ void destroyLocalData(LocalData* data) {
   }
   delete (data->buf6);
 
-  if((data->buf7)->fStarHigh) {
-    VecDestroy((data->buf7)->fStarHigh);
+  if((data->buf7)->fStarHcopy) {
+    VecDestroy((data->buf7)->fStarHcopy);
   }
   if((data->buf7)->gS) {
     VecDestroy((data->buf7)->gS);
