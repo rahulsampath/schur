@@ -7,9 +7,6 @@ extern double** stencil;
 extern int DOFS_PER_NODE;
 
 void createLinearElasticMechanicsStencil() {
-  int N = 9;
-  PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
-  const double h = 1.0/(static_cast<double>(N));
   DOFS_PER_NODE = 2;
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
   typedef double* doublePtr;
@@ -66,7 +63,7 @@ void createConvectionDiffusionStencil() {
   int N = 9;
   double PeInv = 1e-4;
   PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
-  const double h = 1.0/(static_cast<double>(N));
+  const double h = 1.0/(static_cast<double>(N - 1));
   DOFS_PER_NODE = 1;
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
   typedef double* doublePtr;
@@ -108,7 +105,7 @@ void createHardStencilType2() {
 void createHardStencil(const double epsilon, const double kappa) {
   int N = 9;
   PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
-  const double h = 1.0/(static_cast<double>(N));
+  const double h = 1.0/(static_cast<double>(N - 1));
   DOFS_PER_NODE = 2;
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
   typedef double* doublePtr;
