@@ -6,14 +6,14 @@ int main() {
   FILE*fp = fopen("tables.tex", "w");
 
   int N[] = {17, 33, 65, 129};
-  int P[] = {8, 128, 2048, 32768};
-  int G[] = {1, 2, 4, 8};
-  int C[] = {1, 2, 3};
+  int P[] = {8, 128, 2048};
+  int G[] = {2, 4, 8};
+  int C[] = {1, 2, 3, 4, 5};
 
   const int Nlen = 4;
-  const int Plen = 4;
-  const int Glen = 4;
-  const int Clen = 3;
+  const int Plen = 3;
+  const int Glen = 3;
+  const int Clen = 5;
 
   for(int ci = 0; ci < Clen; ++ci) {
     fprintf(fp, "Problem: %d \n\n", C[ci]);
