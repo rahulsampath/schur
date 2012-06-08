@@ -58,6 +58,7 @@ int main() {
             fprintf(fp, " &");
           }
           fclose(inp);
+          std::cout<<"Processed: "<<fname<<std::endl;
         }//end gi
       }//end pi
       fprintf(fp, " \\\\ \\hline \n ");
@@ -109,6 +110,7 @@ int main() {
             fprintf(fp, " &");
           }
           fclose(inp);
+          std::cout<<"Processed: "<<fname<<std::endl;
         }//end gi
       }//end pi
       fprintf(fp, " \\\\ \\hline \n ");
@@ -160,6 +162,7 @@ int main() {
             fprintf(fp, " &");
           }
           fclose(inp);
+          std::cout<<"Processed: "<<fname<<std::endl;
         }//end gi
       }//end pi
       fprintf(fp, " \\\\ \\hline \n ");
