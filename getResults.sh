@@ -1,15 +1,20 @@
 #!/bin/bash
 for file in $(find . -type f -name 'rsdN*\.o*')
 do
- grep "OuterKsp" $file | gawk '{print $4}' > $file.1.out
- grep "RsdSetUp" $file | gawk '{print $4}' > $file.2.out
- grep "CONVERGED_RTOL" $file | sed s/"Linear solve converged due to CONVERGED_RTOL iterations"/""/ > $file.3.out
- export outFileNameA=`echo $file | sed s/".txt"/"Solve.out"/`
- export outFileNameB=`echo $file | sed s/".txt"/"Setup.out"/`
- export outFileNameC=`echo $file | sed s/".txt"/"Iter.out"/`
- mv $file.1.out $outFileNameA
- mv $file.2.out $outFileNameB
- mv $file.3.out $outFileNameC
+ export fileBase=.`echo $file | cut -d '.' -f2 | cut -d '.' -f1`
+ echo "FileBase:" $fileBase
+ grep "OuterKsp" $file | gawk '{print $4}' > $fileBase.1.txt
+ grep "RsdSetUp" $file | gawk '{print $4}' > $fileBase.2.txt
+ grep "CONVERGED_RTOL" $file | sed s/"Linear solve converged due to CONVERGED_RTOL iterations"/""/ > $fileBase.3.txt
+ export outFileNameA=`echo ${fileBase}"Solve.txt"`
+ echo "SolveFile:" $outFileNameA
+ export outFileNameB=`echo ${fileBase}"Setup.txt"`
+ echo "SetupFile:" $outFileNameB
+ export outFileNameC=`echo ${fileBase}"Iter.txt"`
+ echo "IterFile:" $outFileNameC
+ mv $fileBase.1.txt $outFileNameA
+ mv $fileBase.2.txt $outFileNameB
+ mv $fileBase.3.txt $outFileNameC
  echo processed $file
 done
 
