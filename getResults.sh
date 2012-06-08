@@ -1,5 +1,5 @@
 #!/bin/bash
-for file in $(find . -type f -name 'rsdN*\.txt')
+for file in $(find . -type f -name 'rsdN*\.o*')
 do
  grep "OuterKsp" $file | gawk '{print $4}' > $file.1.out
  grep "RsdSetUp" $file | gawk '{print $4}' > $file.2.out
