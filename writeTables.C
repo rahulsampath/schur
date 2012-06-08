@@ -24,7 +24,7 @@ int main() {
     fprintf(fp, "\\scriptsize \n");
     fprintf(fp, "\\begin{center} \n");
     fprintf(fp, "\\begin{tabular}{");
-    for(int j = 0; j < (Plen*Glen); ++j) {
+    for(int j = 0; j <= (Plen*Glen); ++j) {
       fprintf(fp, "|c");
     }//end j
     fprintf(fp, "|}\\hline \n");
@@ -76,7 +76,7 @@ int main() {
     fprintf(fp, "\\scriptsize \n");
     fprintf(fp, "\\begin{center} \n");
     fprintf(fp, "\\begin{tabular}{");
-    for(int j = 0; j < (Plen*Glen); ++j) {
+    for(int j = 0; j <= (Plen*Glen); ++j) {
       fprintf(fp, "|c");
     }//end j
     fprintf(fp, "|}\\hline \n");
@@ -128,7 +128,7 @@ int main() {
     fprintf(fp, "\\scriptsize \n");
     fprintf(fp, "\\begin{center} \n");
     fprintf(fp, "\\begin{tabular}{");
-    for(int j = 0; j < (Plen*Glen); ++j) {
+    for(int j = 0; j <= (Plen*Glen); ++j) {
       fprintf(fp, "|c");
     }//end j
     fprintf(fp, "|}\\hline \n");
