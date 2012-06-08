@@ -19,7 +19,7 @@ do
         echo "#PBS -N rsdN"$N"P"$P"G"$G"C"$C >> myJob.pbs
         echo "#" >> myJob.pbs
         echo " "  >> myJob.pbs
-        echo "cd $PBS_O_WORKDIR" >> myJob.pbs
+        echo 'cd $PBS_O_WORKDIR' >> myJob.pbs
         echo " " >> myJob.pbs
         echo "aprun -n "$P" -S4 -d2 ./testrsd -N "$N" -inner_ksp_max_it "$G" -problem "$C >> myJob.pbs
         echo " " >> myJob.pbs
