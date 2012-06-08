@@ -16,9 +16,9 @@ int main() {
   const int Clen = 5;
 
   for(int ci = 0; ci < Clen; ++ci) {
-    fprintf(fp, "\% Problem: %d \n\n", C[ci]);
+    fprintf(fp, "%% Problem: %d \n\n", C[ci]);
 
-    fprintf(fp, "\% Iterations \n");
+    fprintf(fp, "%% Iterations \n");
 
     fprintf(fp, "\\begin{table} \n");
     fprintf(fp, "\\scriptsize \n");
@@ -64,13 +64,13 @@ int main() {
       fprintf(fp, " \\\\ \\hline \n ");
     }//end ni
 
-    fprintf(fp, " \\end{tabular} \n");
-    fprintf(fp, " \\caption{\\label{tab:prob%dIter} Problem %d. Number of outer Krylov iterations.} \n", C[ci], C[ci]);
-    fprintf(fp, " \\end{center} \n");
-    fprintf(fp, " \\end{table} \n");
-    fprintf(fp, " \n\n ");
+    fprintf(fp, "\\end{tabular} \n");
+    fprintf(fp, "\\caption{\\label{tab:prob%dIter} Problem %d. Number of outer Krylov iterations.} \n", C[ci], C[ci]);
+    fprintf(fp, "\\end{center} \n");
+    fprintf(fp, "\\end{table} \n");
+    fprintf(fp, " \n\n");
 
-    fprintf(fp, "\% Setup Time \n");
+    fprintf(fp, "%% Setup Time \n");
 
     fprintf(fp, "\\begin{table} \n");
     fprintf(fp, "\\scriptsize \n");
@@ -116,13 +116,13 @@ int main() {
       fprintf(fp, " \\\\ \\hline \n ");
     }//end ni
 
-    fprintf(fp, " \\end{tabular} \n");
-    fprintf(fp, " \\caption{\\label{tab:prob%dSetup} Problem %d. Timings (in seconds) for the setup phase.} \n", C[ci], C[ci]);
-    fprintf(fp, " \\end{center} \n");
-    fprintf(fp, " \\end{table} \n");
+    fprintf(fp, "\\end{tabular} \n");
+    fprintf(fp, "\\caption{\\label{tab:prob%dSetup} Problem %d. Timings (in seconds) for the setup phase.} \n", C[ci], C[ci]);
+    fprintf(fp, "\\end{center} \n");
+    fprintf(fp, "\\end{table} \n");
     fprintf(fp, " \n\n ");
 
-    fprintf(fp, "\% Solve Time \n");
+    fprintf(fp, "%% Solve Time \n");
 
     fprintf(fp, "\\begin{table} \n");
     fprintf(fp, "\\scriptsize \n");
@@ -168,10 +168,10 @@ int main() {
       fprintf(fp, " \\\\ \\hline \n ");
     }//end ni
 
-    fprintf(fp, " \\end{tabular} \n");
-    fprintf(fp, " \\caption{\\label{tab:prob%dSolve} Problem %d. Timings (in seconds) for the solve phase.} \n", C[ci], C[ci]);
-    fprintf(fp, " \\end{center} \n");
-    fprintf(fp, " \\end{table} \n");
+    fprintf(fp, "\\end{tabular} \n");
+    fprintf(fp, "\\caption{\\label{tab:prob%dSolve} Problem %d. Timings (in seconds) for the solve phase.} \n", C[ci], C[ci]);
+    fprintf(fp, "\\end{center} \n");
+    fprintf(fp, "\\end{table} \n");
     fprintf(fp, " \n\n ");
 
   }//end ci
