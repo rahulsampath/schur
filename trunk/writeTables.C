@@ -24,7 +24,7 @@ int main() {
       for(int pi = 0; pi < Plen; ++pi) {
         for(int gi = 0; gi < Glen; ++gi) {
           char fname[256];
-          sprintf(fname, "rsdN%dP%dG%dC%dIter.out", N[ni], P[pi], G[gi], C[ci]);
+          sprintf(fname, "rsdN%dP%dG%dC%dIter.txt", N[ni], P[pi], G[gi], C[ci]);
           FILE* inp = fopen(fname, "r");
           int num;
           fscanf(inp, "%d", &num);
@@ -42,7 +42,7 @@ int main() {
       for(int pi = 0; pi < Plen; ++pi) {
         for(int gi = 0; gi < Glen; ++gi) {
           char fname[256];
-          sprintf(fname, "rsdN%dP%dG%dC%dSetup.out", N[ni], P[pi], G[gi], C[ci]);
+          sprintf(fname, "rsdN%dP%dG%dC%dSetup.txt", N[ni], P[pi], G[gi], C[ci]);
           FILE* inp = fopen(fname, "r");
           double val;
           fscanf(inp, "%lf", &val);
@@ -60,7 +60,7 @@ int main() {
       for(int pi = 0; pi < Plen; ++pi) {
         for(int gi = 0; gi < Glen; ++gi) {
           char fname[256];
-          sprintf(fname, "rsdN%dP%dG%dC%dSolve.out", N[ni], P[pi], G[gi], C[ci]);
+          sprintf(fname, "rsdN%dP%dG%dC%dSolve.txt", N[ni], P[pi], G[gi], C[ci]);
           FILE* inp = fopen(fname, "r");
           double val;
           fscanf(inp, "%lf", &val);
