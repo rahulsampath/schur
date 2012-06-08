@@ -5,7 +5,10 @@ do
  echo "FileBase:" $fileBase
  grep "OuterKsp" $file | gawk '{print $4}' > $fileBase.1.txt
  grep "RsdSetUp" $file | gawk '{print $4}' > $fileBase.2.txt
- grep "CONVERGED_RTOL" $file | sed s/"Linear solve converged due to CONVERGED_RTOL iterations"/""/ > $fileBase.3.txt
+ export iterCntR=`grep "CONVERGED_RTOL" $file | sed s/"Linear solve converged due to CONVERGED_RTOL iterations"/""/`
+ export iterCntA=`grep "CONVERGED_ATOL" $file | sed s/"Linear solve converged due to CONVERGED_ATOL iterations"/""/`
+ echo $iterCntR > $fileBase.3.txt
+ echo $iterCntA >> $fileBase.3.txt
  export outFileNameA=`echo ${fileBase}"Solve.txt"`
  echo "SolveFile:" $outFileNameA
  export outFileNameB=`echo ${fileBase}"Setup.txt"`
