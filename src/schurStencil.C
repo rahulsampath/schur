@@ -68,6 +68,7 @@ void createConvectionDiffusionStencil() {
   const double h = 1.0/(static_cast<double>(N - 1));
   DOFS_PER_NODE = 1;
   const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
+
   typedef double* doublePtr;
   stencil = new doublePtr[4];
   for(int j = 0; j < 4; ++j) {
@@ -86,6 +87,58 @@ void createConvectionDiffusionStencil() {
           stencil[j][i] += ( (D*((dPhidPsi(j, eta)*dPhidPsi(i, eta)) + (dPhidEta(j, psi)*dPhidEta(i, psi))))
               - ((h/2.0)*((v1*dPhidPsi(j, eta)*Phi(i, psi, eta)) +
                   (v2*dPhidEta(j, psi)*Phi(i, psi, eta)))) );
+        }//end m
+      }//end n
+    }//end i
+  }//end j
+}
+
+void createConvectionDiffusionStencil2() {
+  int N = 9;
+  double D = 1.0e-4;
+  double v1 = 1.0;
+  double v2 = 1.0;
+  PetscOptionsGetInt(PETSC_NULL, "-N", &N, PETSC_NULL);
+  const double h = 1.0/(static_cast<double>(N - 1));
+  DOFS_PER_NODE = 1;
+  const double gaussPts[] = { (1.0/sqrt(3.0)), (-1.0/sqrt(3.0)) };
+  typedef double* doublePtr;
+  stencil = new doublePtr[12];
+  for(int j = 0; j < 12; ++j) {
+    stencil[j] = new double[12];
+    for(int k = 0; k < 12; ++k) {
+      stencil[j][k] = 0.0;
+    }//end k
+  }//end j
+
+  for(int j = 0; j < 4; ++j) {
+    for(int i = 0; i < 4; ++i) {
+      for(int n = 0; n < 2; ++n) {
+        double eta = gaussPts[n];
+        for(int m = 0; m < 2; ++m) {
+          double psi = gaussPts[m];
+          //f1
+          {
+            int dj = 0;
+            int di = 0;
+            stencil[(j*3) + dj][(i*3) + di] += ((v1*dPhidPsi(j, eta) + v2*dPhidEta(j, psi)) * (v1*dPhidPsi(i, eta) + v2*dPhidEta(i, psi)))
+                                               + D*D*(dPhidPsi(j, eta) + dPhidEta(j, psi))*(dPhidPsi(i, eta) + dPhidEta(i, psi))
+                                               + D*D*(dPhidPsi(j, eta) + dPhidEta(j, psi))*(dPhidPsi(i, eta) + dPhidEta(i, psi));
+;
+          }
+          //f2
+          {
+            int dj = 1;
+            int di = 1;
+            stencil[(j*3) + dj][(i*3) + di] += (dPhidPsi(j, eta) * dPhidPsi(i, eta)) + (h*h/4.)*(Phi(j, psi, eta)*Phi(i, psi, eta));
+          }
+          //f3
+          {
+            int dj = 2;
+            int di = 2;
+            stencil[(j*3) + dj][(i*3) + di] += (dPhidEta(j, psi) * dPhidEta(i, psi)) + (h*h/4.)*(Phi(j, psi, eta)*Phi(i, psi, eta));
+          }
+
         }//end m
       }//end n
     }//end i

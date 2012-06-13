@@ -48,6 +48,8 @@ int main(int argc, char** argv) {
     createConvectionDiffusionStencil();
   } else if(problem == 5) {
     createLinearElasticMechanicsStencil();
+  } else if(problem == 6) {
+    createConvectionDiffusionStencil2();
   } else {
     assert(false);
   }

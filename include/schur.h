@@ -116,6 +116,8 @@ enum ListType {
 
 void createLinearElasticMechanicsStencil();
 
+void createConvectionDiffusionStencil2();
+
 void createConvectionDiffusionStencil();
 
 void createPoissonStencil();
